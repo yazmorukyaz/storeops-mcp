@@ -16,6 +16,8 @@ Optional:
 
 ```sh
 export ASC_API_BASE="https://api.appstoreconnect.apple.com/v1"
+# Default vendor number for sales/downloads reports.
+export ASC_VENDOR_NUMBER="12345678"
 ```
 
 ## Build
@@ -32,3 +34,16 @@ npm run build
 - `appstoreconnect_list_apps`
 - `appstoreconnect_get_app_store_versions`
 - `appstoreconnect_list_builds`
+- `appstoreconnect_get_sales_reports`
+
+### Sales & downloads reports
+
+`appstoreconnect_get_sales_reports` downloads the gzipped Sales and Trends TSV report,
+unzips and parses it into JSON, and adds a units/downloads summary (`total_units`,
+`app_downloads`, and `units_by_product_type`). Pass `sku` or `apple_id` to scope the
+result to a single app.
+
+> Sales and Trends reports require an API key with **Admin**, **Finance**, or **Sales**
+> access. Keys limited to App Manager/Developer roles return HTTP 403. The `vendor_number`
+> is shown in App Store Connect under *Payments and Financial Reports*; set it once via the
+> `ASC_VENDOR_NUMBER` environment variable so you can omit it on each call.

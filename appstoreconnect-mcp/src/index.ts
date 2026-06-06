@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFile } from "node:fs/promises";
+import { gunzipSync } from "node:zlib";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { importPKCS8, SignJWT } from "jose";
@@ -14,6 +15,7 @@ const JWT_TTL_SECONDS = 19 * 60;
 
 const methodSchema = z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]);
 const responseFormatSchema = z.enum(["json", "markdown"]).default("json");
+const salesFrequencySchema = z.enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]).default("DAILY");
 const querySchema = z.record(
   z.union([
     z.string(),
@@ -167,10 +169,154 @@ server.registerTool(
   }
 );
 
+server.registerTool(
+  "appstoreconnect_get_sales_reports",
+  {
+    title: "Get App Store Connect Sales & Downloads Reports",
+    description: "Downloads and parses Sales and Trends reports (gzipped TSV) into JSON, with a units/downloads summary. Useful for app download counts. Requires an API key with Admin, Finance, or Sales access.",
+    inputSchema: {
+      vendor_number: z.string().optional().describe("App Store Connect vendor number (Payments and Financial Reports). Defaults to the ASC_VENDOR_NUMBER environment variable."),
+      frequency: salesFrequencySchema.describe("Report frequency. DAILY/WEEKLY use a date inside the period; MONTHLY uses YYYY-MM; YEARLY uses YYYY."),
+      report_date: z.string().min(1).describe("Report date. DAILY/WEEKLY: YYYY-MM-DD; MONTHLY: YYYY-MM; YEARLY: YYYY."),
+      report_type: z.string().default("SALES").describe("Apple reportType (e.g. SALES, SUBSCRIPTION, SUBSCRIPTION_EVENT)."),
+      report_sub_type: z.string().default("SUMMARY").describe("Apple reportSubType (e.g. SUMMARY, DETAILED)."),
+      version: z.string().default("1_1").describe("Apple report version."),
+      sku: z.string().optional().describe("Optional: only include rows matching this app SKU."),
+      apple_id: z.string().optional().describe("Optional: only include rows matching this Apple Identifier (numeric app id)."),
+      include_rows: z.boolean().default(true).describe("When false, returns only the summary and omits raw rows."),
+      response_format: responseFormatSchema
+    },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true
+    }
+  },
+  async ({ vendor_number, frequency, report_date, report_type, report_sub_type, version, sku, apple_id, include_rows, response_format }) => {
+    const resolvedVendorNumber = vendor_number ?? process.env.ASC_VENDOR_NUMBER;
+    if (!resolvedVendorNumber) {
+      throw new Error("Missing vendor number. Pass vendor_number or set ASC_VENDOR_NUMBER.");
+    }
+    const report = await getSalesReport({ vendor_number: resolvedVendorNumber, frequency, report_date, report_type, report_sub_type, version });
+    if (!report.available) {
+      return result({ vendor_number: resolvedVendorNumber, frequency, report_date, report_type, report_sub_type, version, available: false, message: report.message }, response_format);
+    }
+    let rows = report.rows;
+    if (sku) rows = rows.filter((row) => row["SKU"] === sku);
+    if (apple_id) rows = rows.filter((row) => row["Apple Identifier"] === apple_id);
+    const summary = summarizeUnits(rows);
+    return result({
+      vendor_number: resolvedVendorNumber,
+      frequency,
+      report_date,
+      report_type,
+      report_sub_type,
+      version,
+      available: true,
+      row_count: rows.length,
+      summary,
+      ...(include_rows ? { rows } : {})
+    }, response_format);
+  }
+);
+
 async function appStoreConnectRequest(method: HttpMethod, path: string, query?: Record<string, QueryValue>, body?: unknown) {
   return requestJson(process.env.ASC_API_BASE ?? DEFAULT_API_BASE, method, path, query, body, {
     Authorization: `Bearer ${await getJwt()}`
   });
+}
+
+type SalesReportOptions = {
+  vendor_number: string;
+  frequency: string;
+  report_date: string;
+  report_type: string;
+  report_sub_type: string;
+  version: string;
+};
+
+type SalesReportResult =
+  | { available: true; header: string[]; rows: Array<Record<string, string>> }
+  | { available: false; message: string };
+
+async function getSalesReport(opts: SalesReportOptions): Promise<SalesReportResult> {
+  const baseUrl = process.env.ASC_API_BASE ?? DEFAULT_API_BASE;
+  const url = buildUrl(baseUrl, "/salesReports", {
+    "filter[frequency]": opts.frequency,
+    "filter[reportType]": opts.report_type,
+    "filter[reportSubType]": opts.report_sub_type,
+    "filter[vendorNumber]": opts.vendor_number,
+    "filter[reportDate]": opts.report_date,
+    "filter[version]": opts.version
+  });
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/a-gzip",
+      Authorization: `Bearer ${await getJwt()}`
+    }
+  });
+
+  if (response.status === 404) {
+    return {
+      available: false,
+      message: `No ${opts.frequency} ${opts.report_type}/${opts.report_sub_type} report available for ${opts.report_date}.`
+    };
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    let data: unknown = text;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // keep raw text
+    }
+    throw new Error(formatApiError(response.status, data));
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  const tsv = gunzipSync(buffer).toString("utf8");
+  const { header, rows } = parseTsv(tsv);
+  return { available: true, header, rows };
+}
+
+function parseTsv(tsv: string): { header: string[]; rows: Array<Record<string, string>> } {
+  const lines = tsv.split(/\r?\n/).filter((line) => line.length > 0);
+  if (lines.length === 0) return { header: [], rows: [] };
+  const header = lines[0].split("\t");
+  const rows = lines.slice(1).map((line) => {
+    const cols = line.split("\t");
+    const row: Record<string, string> = {};
+    header.forEach((key, index) => {
+      row[key] = cols[index] ?? "";
+    });
+    return row;
+  });
+  return { header, rows };
+}
+
+function summarizeUnits(rows: Array<Record<string, string>>) {
+  let totalUnits = 0;
+  let appDownloads = 0;
+  const unitsByProductType: Record<string, number> = {};
+  for (const row of rows) {
+    const units = Number.parseInt(row["Units"] ?? "", 10);
+    if (Number.isNaN(units)) continue;
+    totalUnits += units;
+    const productType = row["Product Type Identifier"] ?? "";
+    unitsByProductType[productType] = (unitsByProductType[productType] ?? 0) + units;
+    const isUpdate = productType.startsWith("7");
+    const isInAppPurchase = productType.startsWith("IA");
+    if (!isUpdate && !isInAppPurchase) appDownloads += units;
+  }
+  return {
+    total_units: totalUnits,
+    app_downloads: appDownloads,
+    units_by_product_type: unitsByProductType
+  };
 }
 
 async function getJwt(): Promise<string> {
