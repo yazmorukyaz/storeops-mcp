@@ -27,6 +27,8 @@ cp .env.example .env
 
 Fill in each `.env` with your own credentials.
 
+For where to get each key, see [`CREDENTIALS.md`](./CREDENTIALS.md).
+
 ## Codex
 
 Register one or both plugin folders as local plugins:

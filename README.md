@@ -27,6 +27,8 @@ Never commit:
 
 Each plugin includes a `.env.example`. Copy it to `.env` locally and fill in your own credentials.
 
+For step-by-step instructions on where to get each key, see [`CREDENTIALS.md`](./CREDENTIALS.md).
+
 ## Requirements
 
 - Node.js 20 or newer
@@ -55,6 +57,8 @@ cp revenuecat-mcp/.env.example revenuecat-mcp/.env
 ```
 
 Then edit each `.env`.
+
+Credential source details are documented in [`CREDENTIALS.md`](./CREDENTIALS.md).
 
 ## App Store Connect Credentials
 
