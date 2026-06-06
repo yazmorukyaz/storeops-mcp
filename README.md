@@ -179,6 +179,10 @@ These MCPs can be extended to create and edit production data. Before enabling b
 - Keep destructive operations behind explicit confirmation.
 - Use least-privilege API keys where practical.
 
+## Disclaimer
+
+StoreOps MCP is an independent project. It is not affiliated with, endorsed by, or sponsored by Apple, App Store Connect, or RevenueCat. Product names are used descriptively for API integration purposes.
+
 ## License
 
-No license has been selected yet. Add one before public reuse if you want others to have explicit rights to modify and redistribute.
+MIT. See [`LICENSE`](./LICENSE).

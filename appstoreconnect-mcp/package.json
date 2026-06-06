@@ -2,6 +2,7 @@
   "name": "appstoreconnect-mcp-server",
   "version": "0.1.0",
   "description": "StoreOps MCP server for App Store Connect APIs.",
+  "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
