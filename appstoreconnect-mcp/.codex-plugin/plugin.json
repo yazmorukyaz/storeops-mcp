@@ -1,0 +1,22 @@
+{
+  "name": "appstoreconnect-mcp",
+  "version": "0.1.0",
+  "description": "Local MCP tools for the App Store Connect API.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "App Store Connect MCP",
+    "shortDescription": "Use App Store Connect API tools in Codex.",
+    "longDescription": "Adds a local stdio MCP server for authenticated App Store Connect API workflows. Credentials are read from environment variables.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "mcp",
+      "api-tools"
+    ],
+    "defaultPrompt": "Use the App Store Connect MCP tools to inspect apps, builds, versions, and API resources."
+  },
+  "mcpServers": "./.mcp.json"
+}

@@ -1,0 +1,22 @@
+{
+  "name": "revenuecat-mcp",
+  "version": "0.1.0",
+  "description": "Local MCP tools for the RevenueCat API.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "RevenueCat MCP",
+    "shortDescription": "Use RevenueCat API tools in Codex.",
+    "longDescription": "Adds a local stdio MCP server for authenticated RevenueCat API workflows. Credentials are read from environment variables.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "mcp",
+      "api-tools"
+    ],
+    "defaultPrompt": "Use the RevenueCat MCP tools to inspect projects, customers, subscribers, and API resources."
+  },
+  "mcpServers": "./.mcp.json"
+}

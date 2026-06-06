@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "appstoreconnect-mcp": {
+      "command": "node",
+      "args": [
+        "dist/index.js"
+      ],
+      "cwd": "."
+    }
+  }
+}

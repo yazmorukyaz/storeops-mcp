@@ -1,0 +1,9 @@
+.DS_Store
+.env
+**/.env
+*.p8
+node_modules/
+**/node_modules/
+*.log
+npm-debug.log*
+dist/*.tsbuildinfo
