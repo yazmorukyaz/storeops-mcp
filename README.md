@@ -147,6 +147,8 @@ Register either folder as a local Codex plugin, or copy the folder into your loc
 
 The `.mcp.json` files launch `node dist/index.js`, so run `npm install` and `npm run build` before use.
 
+For a setup where Codex discovers both plugins by default, see [`INSTALL.md`](./INSTALL.md#install-by-default-in-codex). That path uses `~/plugins` plus a personal `~/.agents/plugins/marketplace.json` entry with `"installation": "INSTALLED_BY_DEFAULT"`.
+
 After the plugins are enabled in Codex, invoke them with normal language or direct tool names:
 
 ```text
