@@ -1,4 +1,4 @@
-# Security Policy
+# StoreOps MCP Security Policy
 
 ## Secrets
 

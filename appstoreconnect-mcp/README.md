@@ -1,6 +1,6 @@
-# App Store Connect MCP Plugin
+# StoreOps App Store Connect MCP
 
-Local Codex plugin containing a stdio MCP server for App Store Connect API work.
+StoreOps plugin containing a stdio MCP server for App Store Connect API work.
 
 ## Credentials
 

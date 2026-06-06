@@ -1,7 +1,7 @@
 {
   "name": "revenuecat-mcp-server",
   "version": "0.1.0",
-  "description": "Local MCP server for RevenueCat APIs.",
+  "description": "StoreOps MCP server for RevenueCat APIs.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

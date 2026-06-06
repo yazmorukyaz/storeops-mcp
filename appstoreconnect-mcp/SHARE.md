@@ -1,4 +1,4 @@
-# Sharing App Store Connect MCP
+# Sharing StoreOps App Store Connect MCP
 
 This folder is safe to share as source code. It does not include your Apple private keys, issuer IDs, key IDs, shared secrets, or local `.p8` files.
 

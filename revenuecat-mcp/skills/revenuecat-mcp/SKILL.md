@@ -1,9 +1,9 @@
 ---
 name: revenuecat-mcp
-description: Use this skill when working with RevenueCat through the local RevenueCat MCP plugin.
+description: Use this skill when working with RevenueCat through the StoreOps RevenueCat MCP plugin.
 ---
 
-# RevenueCat MCP
+# StoreOps RevenueCat MCP
 
 Use this MCP for RevenueCat API workflows only.
 

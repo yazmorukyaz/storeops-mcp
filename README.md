@@ -1,13 +1,15 @@
-# App Store MCP
+# StoreOps MCP
 
-Local Codex/MCP plugins for managing App Store Connect and RevenueCat from an AI assistant.
+Automate App Store Connect and RevenueCat workflows from Codex or any MCP client.
 
-This repository contains two separate MCP servers:
+StoreOps MCP contains two separate local MCP servers:
 
 - [`appstoreconnect-mcp`](./appstoreconnect-mcp): App Store Connect API tools for apps, builds, app versions, metadata, screenshots, in-app purchases, subscriptions, pricing, and review workflows.
 - [`revenuecat-mcp`](./revenuecat-mcp): RevenueCat API tools for projects, customers, products, offerings, packages, and entitlements.
 
 The servers are intentionally split because App Store Connect and RevenueCat have different auth models, permissions, APIs, and failure modes.
+
+Use it to make store operations easier to inspect, script, and automate: app metadata, builds, app versions, screenshots, in-app purchases, subscriptions, RevenueCat projects, customers, offerings, packages, and entitlements.
 
 ## Security
 

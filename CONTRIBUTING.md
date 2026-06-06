@@ -1,4 +1,4 @@
-# Contributing
+# Contributing to StoreOps MCP
 
 Keep changes small and API-specific.
 

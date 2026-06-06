@@ -1,7 +1,7 @@
 {
   "name": "appstoreconnect-mcp-server",
   "version": "0.1.0",
-  "description": "Local MCP server for App Store Connect APIs.",
+  "description": "StoreOps MCP server for App Store Connect APIs.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

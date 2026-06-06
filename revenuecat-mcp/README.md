@@ -1,6 +1,6 @@
-# RevenueCat MCP Plugin
+# StoreOps RevenueCat MCP
 
-Local Codex plugin containing a stdio MCP server for RevenueCat API work.
+StoreOps plugin containing a stdio MCP server for RevenueCat API work.
 
 ## Credentials
 

@@ -1,4 +1,4 @@
-# Install
+# Install StoreOps MCP
 
 ## Local Development
 
@@ -7,7 +7,7 @@ git clone https://github.com/yazmorukyaz/appstore-mcp.git
 cd appstore-mcp
 ```
 
-Build App Store Connect MCP:
+Build the StoreOps App Store Connect MCP:
 
 ```sh
 cd appstoreconnect-mcp
@@ -16,7 +16,7 @@ npm run build
 cp .env.example .env
 ```
 
-Build RevenueCat MCP:
+Build the StoreOps RevenueCat MCP:
 
 ```sh
 cd ../revenuecat-mcp

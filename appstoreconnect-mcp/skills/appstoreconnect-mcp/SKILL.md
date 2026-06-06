@@ -1,9 +1,9 @@
 ---
 name: appstoreconnect-mcp
-description: Use this skill when working with App Store Connect through the local App Store Connect MCP plugin.
+description: Use this skill when working with App Store Connect through the StoreOps App Store Connect MCP plugin.
 ---
 
-# App Store Connect MCP
+# StoreOps App Store Connect MCP
 
 Use this MCP for App Store Connect API workflows only.
 

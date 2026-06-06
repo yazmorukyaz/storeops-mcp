@@ -1,4 +1,4 @@
-# Sharing RevenueCat MCP
+# Sharing StoreOps RevenueCat MCP
 
 This folder is safe to share as source code. It does not include your RevenueCat API key.
 
