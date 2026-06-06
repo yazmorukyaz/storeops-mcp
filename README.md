@@ -1,5 +1,7 @@
 # StoreOps MCP
 
+![StoreOps MCP thumbnail](./assets/storeops-mcp-thumbnail.jpg)
+
 Automate App Store Connect and RevenueCat workflows from Codex or any MCP client.
 
 StoreOps MCP contains two separate local MCP servers:
@@ -144,6 +146,26 @@ Each plugin folder has:
 Register either folder as a local Codex plugin, or copy the folder into your local plugin directory and add it to your personal marketplace.
 
 The `.mcp.json` files launch `node dist/index.js`, so run `npm install` and `npm run build` before use.
+
+After the plugins are enabled in Codex, invoke them with normal language or direct tool names:
+
+```text
+Use appstoreconnect_auth_status with check_jwt=true.
+```
+
+```text
+Use appstoreconnect_list_apps with limit 10.
+```
+
+```text
+Use revenuecat_auth_status.
+```
+
+```text
+Use revenuecat_list_projects.
+```
+
+If a current Codex thread does not see newly installed tools, start a new thread or restart/refresh Codex. MCP tools are often loaded when a session starts.
 
 ## Write Operations
 

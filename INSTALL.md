@@ -42,6 +42,17 @@ node dist/index.js
 
 Your Codex environment must provide the needed credentials when the MCP server starts. A simple local setup is to launch Codex from a shell where you have sourced the relevant `.env`.
 
+Once enabled, ask Codex to use the tools directly:
+
+```text
+Use appstoreconnect_auth_status with check_jwt=true.
+Use appstoreconnect_list_apps with limit 10.
+Use revenuecat_auth_status.
+Use revenuecat_list_projects.
+```
+
+If the tools do not appear in the current thread, start a new Codex thread or restart/refresh Codex.
+
 ## Verification
 
 Use the auth status tools first:
