@@ -25,6 +25,92 @@ const responseFormatSchema = z.enum(["json", "markdown"]).default("json");
 const salesFrequencySchema = z.enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]).default("DAILY");
 const analyticsAccessTypeSchema = z.enum(["ONGOING", "ONE_TIME_SNAPSHOT"]);
 const analyticsGranularitySchema = z.enum(["DAILY", "WEEKLY", "MONTHLY"]);
+const screenshotDisplayTypeSchema = z.enum([
+    "APP_IPHONE_65",
+    "APP_IPHONE_67",
+    "APP_IPHONE_61",
+    "APP_IPHONE_58",
+    "APP_IPHONE_55",
+    "APP_IPHONE_47",
+    "APP_IPHONE_40",
+    "APP_IPHONE_35",
+    "APP_IPAD_PRO_3GEN_129",
+    "APP_IPAD_PRO_3GEN_11",
+    "APP_IPAD_PRO_129",
+    "APP_IPAD_105",
+    "APP_IPAD_97",
+    "APP_DESKTOP",
+    "APP_WATCH_ULTRA",
+    "APP_WATCH_SERIES_7",
+    "APP_WATCH_SERIES_4",
+    "APP_WATCH_SERIES_3",
+    "APP_APPLE_TV",
+    "APP_VISION_PRO"
+]);
+const appStoreLocales = [
+    "ar-SA",
+    "ca",
+    "cs",
+    "da",
+    "de-DE",
+    "el",
+    "en-AU",
+    "en-CA",
+    "en-GB",
+    "en-US",
+    "es-ES",
+    "es-MX",
+    "fi",
+    "fr-CA",
+    "fr-FR",
+    "he",
+    "hi",
+    "hr",
+    "hu",
+    "id",
+    "it",
+    "ja",
+    "ko",
+    "ms",
+    "nl-NL",
+    "no",
+    "pl",
+    "pt-BR",
+    "pt-PT",
+    "ro",
+    "ru",
+    "sk",
+    "sv",
+    "th",
+    "tr",
+    "uk",
+    "vi",
+    "zh-Hans",
+    "zh-Hant",
+    "bn",
+    "gu",
+    "kn",
+    "ml",
+    "mr",
+    "or",
+    "pa",
+    "sl",
+    "ta",
+    "te",
+    "ur"
+];
+const versionLocalizationAttributesSchema = z.object({
+    description: z.string().optional(),
+    keywords: z.string().optional(),
+    marketingUrl: z.string().url().nullable().optional(),
+    promotionalText: z.string().optional(),
+    supportUrl: z.string().url().nullable().optional(),
+    whatsNew: z.string().optional()
+}).strict();
+const displayLocalizationAttributesSchema = z.object({
+    name: z.string().optional(),
+    description: z.string().optional()
+}).strict();
 const querySchema = z.record(z.union([
     z.string(),
     z.number(),
@@ -151,6 +237,450 @@ server.registerTool("appstoreconnect_list_builds", {
     if (version)
         query["filter[preReleaseVersion.version]"] = version;
     return result(await appStoreConnectRequest("GET", "/builds", query), response_format);
+});
+server.registerTool("appstoreconnect_list_supported_locales", {
+    title: "List App Store Supported Locales",
+    description: "Returns App Store metadata locale shortcodes supported as of the June 2026 App Store localization expansion.",
+    inputSchema: {
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false
+    }
+}, async ({ response_format }) => result({
+    count: appStoreLocales.length,
+    locales: appStoreLocales
+}, response_format));
+server.registerTool("appstoreconnect_get_app", {
+    title: "Get App Store Connect App",
+    description: "Reads one app and can include related App Store metadata resources.",
+    inputSchema: {
+        app_id: z.string().min(1).describe("App Store Connect app resource ID."),
+        include: z.array(z.string()).default(["appInfos", "appStoreVersions", "inAppPurchasesV2", "subscriptionGroups", "appCustomProductPages", "promotedPurchases"]).describe("Related resources to include."),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ app_id, include, response_format }) => {
+    const query = {};
+    if (include.length > 0)
+        query.include = include.join(",");
+    return result(await appStoreConnectRequest("GET", `/apps/${encodeURIComponent(app_id)}`, query), response_format);
+});
+server.registerTool("appstoreconnect_list_app_infos", {
+    title: "List App Info Records",
+    description: "Lists app-level metadata records for an app, including category and age-rating relationships.",
+    inputSchema: {
+        app_id: z.string().min(1),
+        limit: z.number().int().min(1).max(200).default(50),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ app_id, limit, response_format }) => {
+    return result(await appStoreConnectRequest("GET", `/apps/${encodeURIComponent(app_id)}/appInfos`, {
+        limit,
+        include: "appInfoLocalizations,primaryCategory,primarySubcategoryOne,primarySubcategoryTwo,secondaryCategory,secondarySubcategoryOne,secondarySubcategoryTwo"
+    }), response_format);
+});
+server.registerTool("appstoreconnect_list_app_info_localizations", {
+    title: "List App Info Localizations",
+    description: "Lists localized app-level information such as app name, subtitle, privacy policy URL, and privacy choices URL.",
+    inputSchema: {
+        app_info_id: z.string().min(1),
+        locale: z.string().optional(),
+        limit: z.number().int().min(1).max(200).default(200),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ app_info_id, locale, limit, response_format }) => {
+    const query = { limit };
+    if (locale)
+        query["filter[locale]"] = locale;
+    return result(await appStoreConnectRequest("GET", `/appInfos/${encodeURIComponent(app_info_id)}/appInfoLocalizations`, query), response_format);
+});
+server.registerTool("appstoreconnect_list_app_store_version_localizations", {
+    title: "List App Store Version Localizations",
+    description: "Lists localized version-level metadata: description, keywords, promotional text, what's new, support URL, and marketing URL.",
+    inputSchema: {
+        app_store_version_id: z.string().min(1),
+        locale: z.string().optional(),
+        limit: z.number().int().min(1).max(200).default(200),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ app_store_version_id, locale, limit, response_format }) => {
+    const query = {
+        limit,
+        include: "appScreenshotSets,appPreviewSets,searchKeywords"
+    };
+    if (locale)
+        query["filter[locale]"] = locale;
+    return result(await appStoreConnectRequest("GET", `/appStoreVersions/${encodeURIComponent(app_store_version_id)}/appStoreVersionLocalizations`, query), response_format);
+});
+server.registerTool("appstoreconnect_get_localization_visuals", {
+    title: "Get Localization Visuals",
+    description: "Lists screenshot sets, screenshots, app preview sets, app previews, and search keyword resources for a version localization.",
+    inputSchema: {
+        localization_id: z.string().min(1).describe("App Store Version Localization ID."),
+        limit: z.number().int().min(1).max(200).default(100),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ localization_id, limit, response_format }) => {
+    return result(await getLocalizationVisuals(localization_id, limit), response_format);
+});
+server.registerTool("appstoreconnect_create_screenshot_set", {
+    title: "Create Screenshot Set",
+    description: "Creates an App Store screenshot set for a version localization and display type. Use before uploading screenshots.",
+    inputSchema: {
+        localization_id: z.string().min(1),
+        screenshot_display_type: screenshotDisplayTypeSchema.describe("Apple screenshot display type."),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true
+    }
+}, async ({ localization_id, screenshot_display_type, response_format }) => {
+    return result(await appStoreConnectRequest("POST", "/appScreenshotSets", undefined, {
+        data: {
+            type: "appScreenshotSets",
+            attributes: { screenshotDisplayType: screenshot_display_type },
+            relationships: {
+                appStoreVersionLocalization: { data: { type: "appStoreVersionLocalizations", id: localization_id } }
+            }
+        }
+    }), response_format);
+});
+server.registerTool("appstoreconnect_create_app_store_version_localization", {
+    title: "Create App Store Version Localization",
+    description: "Creates localized version-level metadata for a locale. Use this to add translated ASO copy for a new App Store locale.",
+    inputSchema: {
+        app_store_version_id: z.string().min(1),
+        locale: z.string().min(2).describe("App Store locale shortcode, for example en-US or tr."),
+        attributes: versionLocalizationAttributesSchema.describe("Localized version metadata to create."),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true
+    }
+}, async ({ app_store_version_id, locale, attributes, response_format }) => {
+    return result(await appStoreConnectRequest("POST", "/appStoreVersionLocalizations", undefined, {
+        data: {
+            type: "appStoreVersionLocalizations",
+            attributes: { locale, ...attributes },
+            relationships: {
+                appStoreVersion: { data: { type: "appStoreVersions", id: app_store_version_id } }
+            }
+        }
+    }), response_format);
+});
+server.registerTool("appstoreconnect_update_app_store_version_localization", {
+    title: "Update App Store Version Localization",
+    description: "Updates localized ASO metadata for an existing App Store version localization: description, keywords, promo text, what's new, support URL, and marketing URL.",
+    inputSchema: {
+        localization_id: z.string().min(1),
+        attributes: versionLocalizationAttributesSchema.describe("Only supplied fields are updated."),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ localization_id, attributes, response_format }) => {
+    return result(await patchResource("appStoreVersionLocalizations", localization_id, attributes), response_format);
+});
+server.registerTool("appstoreconnect_update_app_info_localization", {
+    title: "Update App Info Localization",
+    description: "Updates app-level localized metadata such as app name, subtitle, privacy policy URL, and privacy choices URL.",
+    inputSchema: {
+        localization_id: z.string().min(1),
+        attributes: z.object({
+            name: z.string().optional(),
+            subtitle: z.string().optional(),
+            privacyPolicyUrl: z.string().url().nullable().optional(),
+            privacyChoicesUrl: z.string().url().nullable().optional()
+        }).strict(),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ localization_id, attributes, response_format }) => {
+    return result(await patchResource("appInfoLocalizations", localization_id, attributes), response_format);
+});
+server.registerTool("appstoreconnect_list_iaps", {
+    title: "List In-App Purchases",
+    description: "Lists in-app purchases for an app. Defaults to the newer v2 relationship where supported.",
+    inputSchema: {
+        app_id: z.string().min(1),
+        api_version: z.enum(["v1", "v2"]).default("v2"),
+        limit: z.number().int().min(1).max(200).default(100),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ app_id, api_version, limit, response_format }) => {
+    const relationship = api_version === "v2" ? "inAppPurchasesV2" : "inAppPurchases";
+    return result(await appStoreConnectRequest("GET", `/apps/${encodeURIComponent(app_id)}/${relationship}`, { limit }), response_format);
+});
+server.registerTool("appstoreconnect_get_iap", {
+    title: "Get In-App Purchase",
+    description: "Reads one in-app purchase and includes localizations, price schedule, and review screenshot relationships where available.",
+    inputSchema: {
+        iap_id: z.string().min(1),
+        api_version: z.enum(["v1", "v2"]).default("v2"),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ iap_id, api_version, response_format }) => {
+    const path = api_version === "v2" ? `/v2/inAppPurchases/${encodeURIComponent(iap_id)}` : `/inAppPurchases/${encodeURIComponent(iap_id)}`;
+    return result(await appStoreConnectRequest("GET", path, {
+        include: api_version === "v2"
+            ? "inAppPurchaseLocalizations,pricePoints,content,appStoreReviewScreenshot,promotedPurchase,iapPriceSchedule,inAppPurchaseAvailability,images,offerCodes"
+            : "inAppPurchaseLocalizations,pricePoints,appStoreReviewScreenshot,promotedPurchase"
+    }), response_format);
+});
+server.registerTool("appstoreconnect_list_iap_localizations", {
+    title: "List In-App Purchase Localizations",
+    description: "Lists localized display name and description for an in-app purchase.",
+    inputSchema: {
+        iap_id: z.string().min(1),
+        api_version: z.enum(["v1", "v2"]).default("v2"),
+        limit: z.number().int().min(1).max(200).default(200),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ iap_id, api_version, limit, response_format }) => {
+    const path = api_version === "v2"
+        ? `/v2/inAppPurchases/${encodeURIComponent(iap_id)}/inAppPurchaseLocalizations`
+        : `/inAppPurchases/${encodeURIComponent(iap_id)}/inAppPurchaseLocalizations`;
+    return result(await appStoreConnectRequest("GET", path, { limit }), response_format);
+});
+server.registerTool("appstoreconnect_update_iap_localization", {
+    title: "Update In-App Purchase Localization",
+    description: "Updates an IAP localization display name and/or description.",
+    inputSchema: {
+        localization_id: z.string().min(1),
+        attributes: displayLocalizationAttributesSchema,
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ localization_id, attributes, response_format }) => {
+    return result(await patchResource("inAppPurchaseLocalizations", localization_id, attributes), response_format);
+});
+server.registerTool("appstoreconnect_list_subscription_groups", {
+    title: "List Subscription Groups",
+    description: "Lists auto-renewable subscription groups for an app.",
+    inputSchema: {
+        app_id: z.string().min(1),
+        limit: z.number().int().min(1).max(200).default(100),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ app_id, limit, response_format }) => {
+    return result(await appStoreConnectRequest("GET", `/apps/${encodeURIComponent(app_id)}/subscriptionGroups`, { limit }), response_format);
+});
+server.registerTool("appstoreconnect_list_subscriptions", {
+    title: "List Subscriptions",
+    description: "Lists subscriptions in a subscription group.",
+    inputSchema: {
+        subscription_group_id: z.string().min(1),
+        limit: z.number().int().min(1).max(200).default(100),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ subscription_group_id, limit, response_format }) => {
+    return result(await appStoreConnectRequest("GET", `/subscriptionGroups/${encodeURIComponent(subscription_group_id)}/subscriptions`, { limit }), response_format);
+});
+server.registerTool("appstoreconnect_list_subscription_localizations", {
+    title: "List Subscription Localizations",
+    description: "Lists localized display name and description for a subscription.",
+    inputSchema: {
+        subscription_id: z.string().min(1),
+        limit: z.number().int().min(1).max(200).default(200),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ subscription_id, limit, response_format }) => {
+    return result(await appStoreConnectRequest("GET", `/subscriptions/${encodeURIComponent(subscription_id)}/subscriptionLocalizations`, { limit }), response_format);
+});
+server.registerTool("appstoreconnect_update_subscription_localization", {
+    title: "Update Subscription Localization",
+    description: "Updates a subscription localization display name and/or description.",
+    inputSchema: {
+        localization_id: z.string().min(1),
+        attributes: displayLocalizationAttributesSchema,
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ localization_id, attributes, response_format }) => {
+    return result(await patchResource("subscriptionLocalizations", localization_id, attributes), response_format);
+});
+server.registerTool("appstoreconnect_list_subscription_group_localizations", {
+    title: "List Subscription Group Localizations",
+    description: "Lists localized subscription group names.",
+    inputSchema: {
+        subscription_group_id: z.string().min(1),
+        limit: z.number().int().min(1).max(200).default(200),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ subscription_group_id, limit, response_format }) => {
+    return result(await appStoreConnectRequest("GET", `/subscriptionGroups/${encodeURIComponent(subscription_group_id)}/subscriptionGroupLocalizations`, { limit }), response_format);
+});
+server.registerTool("appstoreconnect_list_custom_product_pages", {
+    title: "List Custom Product Pages",
+    description: "Lists custom product pages for an app for campaign-specific ASO surfaces.",
+    inputSchema: {
+        app_id: z.string().min(1),
+        limit: z.number().int().min(1).max(200).default(100),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ app_id, limit, response_format }) => {
+    return result(await appStoreConnectRequest("GET", `/apps/${encodeURIComponent(app_id)}/appCustomProductPages`, { limit }), response_format);
+});
+server.registerTool("appstoreconnect_list_promoted_purchases", {
+    title: "List Promoted Purchases",
+    description: "Lists promoted in-app purchases and subscriptions configured for App Store visibility.",
+    inputSchema: {
+        app_id: z.string().min(1),
+        limit: z.number().int().min(1).max(200).default(100),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ app_id, limit, response_format }) => {
+    return result(await appStoreConnectRequest("GET", `/apps/${encodeURIComponent(app_id)}/promotedPurchases`, { limit }), response_format);
+});
+server.registerTool("appstoreconnect_list_customer_reviews", {
+    title: "List Customer Reviews",
+    description: "Lists App Store customer reviews for reputation and keyword-mining analysis.",
+    inputSchema: {
+        app_id: z.string().min(1),
+        territory: z.string().optional().describe("Optional territory filter, for example USA."),
+        limit: z.number().int().min(1).max(200).default(100),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ app_id, territory, limit, response_format }) => {
+    const query = { limit };
+    if (territory)
+        query["filter[territory]"] = territory;
+    return result(await appStoreConnectRequest("GET", `/apps/${encodeURIComponent(app_id)}/customerReviews`, query), response_format);
+});
+server.registerTool("appstoreconnect_audit_store_marketing", {
+    title: "Audit App Store Marketing Surface",
+    description: "Fetches and summarizes listing metadata, localizations, keywords, screenshot coverage, custom product pages, IAPs, subscriptions, promoted purchases, reviews, and analytics readiness.",
+    inputSchema: {
+        app_id: z.string().min(1),
+        version_limit: z.number().int().min(1).max(20).default(5),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ app_id, version_limit, response_format }) => {
+    return result(await auditStoreMarketing(app_id, version_limit), response_format);
 });
 server.registerTool("appstoreconnect_get_sales_reports", {
     title: "Get App Store Connect Sales & Downloads Reports",
@@ -379,9 +909,129 @@ server.registerTool("appstoreconnect_analyze_aso_overview", {
     return result(await analyzeAsoOverview(app_id, request_id, granularity, processing_date, max_report_rows), response_format);
 });
 async function appStoreConnectRequest(method, path, query, body) {
-    return requestJson(process.env.ASC_API_BASE ?? DEFAULT_API_BASE, method, path, query, body, {
+    const configuredBase = process.env.ASC_API_BASE ?? DEFAULT_API_BASE;
+    const base = path.startsWith("/v2/")
+        ? configuredBase.replace(/\/v1\/?$/, "")
+        : configuredBase;
+    return requestJson(base, method, path, query, body, {
         Authorization: `Bearer ${await getJwt()}`
     });
+}
+async function patchResource(type, id, attributes) {
+    return appStoreConnectRequest("PATCH", `/${type}/${encodeURIComponent(id)}`, undefined, {
+        data: {
+            type,
+            id,
+            attributes
+        }
+    });
+}
+async function getLocalizationVisuals(localizationId, limit) {
+    const [screenshotSets, previewSets, searchKeywords] = await Promise.all([
+        safeAppStoreConnectRequest("GET", `/appStoreVersionLocalizations/${encodeURIComponent(localizationId)}/appScreenshotSets`, { limit }),
+        safeAppStoreConnectRequest("GET", `/appStoreVersionLocalizations/${encodeURIComponent(localizationId)}/appPreviewSets`, { limit }),
+        safeAppStoreConnectRequest("GET", `/appStoreVersionLocalizations/${encodeURIComponent(localizationId)}/searchKeywords`, { limit })
+    ]);
+    const screenshotSetItems = screenshotSets.ok ? getResources(screenshotSets.response) : [];
+    const previewSetItems = previewSets.ok ? getResources(previewSets.response) : [];
+    const screenshots = await Promise.all(screenshotSetItems.map((set) => safeAppStoreConnectRequest("GET", `/appScreenshotSets/${encodeURIComponent(set.id)}/appScreenshots`, { limit })));
+    const previews = await Promise.all(previewSetItems.map((set) => safeAppStoreConnectRequest("GET", `/appPreviewSets/${encodeURIComponent(set.id)}/appPreviews`, { limit })));
+    return {
+        localization_id: localizationId,
+        screenshot_sets: summarizeSafeResponse(screenshotSets),
+        screenshots_by_set: screenshotSetItems.map((set, index) => ({
+            set: summarizeResource(set),
+            screenshots: summarizeSafeResponse(screenshots[index])
+        })),
+        preview_sets: summarizeSafeResponse(previewSets),
+        previews_by_set: previewSetItems.map((set, index) => ({
+            set: summarizeResource(set),
+            previews: summarizeSafeResponse(previews[index])
+        })),
+        search_keywords: summarizeSafeResponse(searchKeywords)
+    };
+}
+async function auditStoreMarketing(appId, versionLimit) {
+    const [app, appInfos, versions, iaps, subscriptionGroups, customProductPages, promotedPurchases, reviews, analyticsRequests] = await Promise.all([
+        safeAppStoreConnectRequest("GET", `/apps/${encodeURIComponent(appId)}`, {
+            include: "appInfos,appStoreVersions,inAppPurchasesV2,subscriptionGroups,appCustomProductPages,promotedPurchases"
+        }),
+        safeAppStoreConnectRequest("GET", `/apps/${encodeURIComponent(appId)}/appInfos`, { limit: 50 }),
+        safeAppStoreConnectRequest("GET", `/apps/${encodeURIComponent(appId)}/appStoreVersions`, { limit: versionLimit }),
+        safeAppStoreConnectRequest("GET", `/apps/${encodeURIComponent(appId)}/inAppPurchasesV2`, { limit: 200 }),
+        safeAppStoreConnectRequest("GET", `/apps/${encodeURIComponent(appId)}/subscriptionGroups`, { limit: 200 }),
+        safeAppStoreConnectRequest("GET", `/apps/${encodeURIComponent(appId)}/appCustomProductPages`, { limit: 200 }),
+        safeAppStoreConnectRequest("GET", `/apps/${encodeURIComponent(appId)}/promotedPurchases`, { limit: 200 }),
+        safeAppStoreConnectRequest("GET", `/apps/${encodeURIComponent(appId)}/customerReviews`, { limit: 100 }),
+        safeAppStoreConnectRequest("GET", `/apps/${encodeURIComponent(appId)}/analyticsReportRequests`, { limit: 200 })
+    ]);
+    const versionItems = versions.ok ? getResources(versions.response) : [];
+    const appInfoItems = appInfos.ok ? getResources(appInfos.response) : [];
+    const appInfoLocalizations = await Promise.all(appInfoItems.map((item) => safeAppStoreConnectRequest("GET", `/appInfos/${encodeURIComponent(item.id)}/appInfoLocalizations`, { limit: 200 })));
+    const versionLocalizations = await Promise.all(versionItems.map((version) => safeAppStoreConnectRequest("GET", `/appStoreVersions/${encodeURIComponent(version.id)}/appStoreVersionLocalizations`, {
+        limit: 200,
+        include: "appScreenshotSets,appPreviewSets,searchKeywords"
+    })));
+    const subscriptionGroupItems = subscriptionGroups.ok ? getResources(subscriptionGroups.response) : [];
+    const subscriptionsByGroup = await Promise.all(subscriptionGroupItems.map((group) => safeAppStoreConnectRequest("GET", `/subscriptionGroups/${encodeURIComponent(group.id)}/subscriptions`, { limit: 200 })));
+    const versionLocalizationItems = versionLocalizations.flatMap((entry) => entry.ok ? getResources(entry.response) : []);
+    const localesPresent = uniqueStrings(versionLocalizationItems.map((item) => item.attributes?.locale));
+    const missingCommonLocales = ["en-US", "en-GB", "tr", "de-DE", "fr-FR", "es-ES", "ja", "ko", "zh-Hans", "pt-BR"]
+        .filter((locale) => !localesPresent.includes(locale));
+    return {
+        app_id: appId,
+        app: summarizeSafeResponse(app),
+        counts: {
+            app_infos: appInfoItems.length,
+            app_info_localizations: appInfoLocalizations.reduce((sum, entry) => sum + countSafeResources(entry), 0),
+            app_store_versions: versionItems.length,
+            app_store_version_localizations: versionLocalizationItems.length,
+            iaps: countSafeResources(iaps),
+            subscription_groups: subscriptionGroupItems.length,
+            subscriptions: subscriptionsByGroup.reduce((sum, entry) => sum + countSafeResources(entry), 0),
+            custom_product_pages: countSafeResources(customProductPages),
+            promoted_purchases: countSafeResources(promotedPurchases),
+            customer_reviews_returned: countSafeResources(reviews),
+            analytics_report_requests: countSafeResources(analyticsRequests)
+        },
+        localization_coverage: {
+            supported_locale_count: appStoreLocales.length,
+            present_version_locales: localesPresent,
+            missing_common_growth_locales: missingCommonLocales
+        },
+        samples: {
+            latest_version: summarizeResource(versionItems[0]),
+            first_version_localization: summarizeResource(versionLocalizationItems[0]),
+            first_iap: summarizeResource(iaps.ok ? getResources(iaps.response)[0] : undefined),
+            first_subscription_group: summarizeResource(subscriptionGroupItems[0]),
+            first_subscription: summarizeResource(subscriptionsByGroup.flatMap((entry) => entry.ok ? getResources(entry.response) : [])[0]),
+            first_custom_product_page: summarizeResource(customProductPages.ok ? getResources(customProductPages.response)[0] : undefined),
+            first_review: summarizeResource(reviews.ok ? getResources(reviews.response)[0] : undefined)
+        },
+        fetchability: {
+            app: app.ok,
+            app_infos: appInfos.ok,
+            app_store_versions: versions.ok,
+            iaps_v2: iaps.ok,
+            subscription_groups: subscriptionGroups.ok,
+            custom_product_pages: customProductPages.ok,
+            promoted_purchases: promotedPurchases.ok,
+            customer_reviews: reviews.ok,
+            analytics_report_requests: analyticsRequests.ok
+        },
+        failures: Object.fromEntries(Object.entries({ app, appInfos, versions, iaps, subscriptionGroups, customProductPages, promotedPurchases, reviews, analyticsRequests })
+            .filter(([, entry]) => !entry.ok)
+            .map(([key, entry]) => [key, entry.ok ? undefined : entry.error])),
+        next_best_actions: buildMarketingActions({
+            versionLocalizationCount: versionLocalizationItems.length,
+            missingCommonLocales,
+            iapCount: countSafeResources(iaps),
+            subscriptionCount: subscriptionsByGroup.reduce((sum, entry) => sum + countSafeResources(entry), 0),
+            customProductPageCount: countSafeResources(customProductPages),
+            promotedPurchaseCount: countSafeResources(promotedPurchases),
+            reviewCount: countSafeResources(reviews)
+        })
+    };
 }
 async function getSalesReport(opts) {
     const baseUrl = process.env.ASC_API_BASE ?? DEFAULT_API_BASE;
@@ -681,6 +1331,53 @@ async function analyzeAsoOverview(appId, requestId, granularity, processingDate,
 function getResources(response) {
     const data = response.data?.data;
     return Array.isArray(data) ? data : [];
+}
+async function safeAppStoreConnectRequest(method, path, query, body) {
+    try {
+        return { ok: true, response: await appStoreConnectRequest(method, path, query, body) };
+    }
+    catch (error) {
+        return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
+}
+function countSafeResources(entry) {
+    return entry.ok ? getResources(entry.response).length : 0;
+}
+function summarizeSafeResponse(entry) {
+    if (!entry.ok)
+        return { ok: false, error: entry.error };
+    const resources = getResources(entry.response);
+    return {
+        ok: true,
+        status: entry.response.status,
+        count: resources.length,
+        data: resources.map(summarizeResource)
+    };
+}
+function uniqueStrings(values) {
+    return [...new Set(values.filter((value) => typeof value === "string"))].sort();
+}
+function buildMarketingActions(input) {
+    const actions = [];
+    if (input.versionLocalizationCount === 0) {
+        actions.push("Create App Store version localizations before attempting ASO translation work.");
+    }
+    if (input.missingCommonLocales.length > 0) {
+        actions.push(`Expand localized metadata for growth locales: ${input.missingCommonLocales.join(", ")}.`);
+    }
+    if (input.iapCount > 0 || input.subscriptionCount > 0) {
+        actions.push("Audit IAP/subscription names, descriptions, screenshots, and promoted purchase visibility for conversion quality.");
+    }
+    if (input.customProductPageCount === 0) {
+        actions.push("Create custom product pages for paid campaigns, keyword clusters, and audience-specific screenshots.");
+    }
+    if (input.promotedPurchaseCount === 0 && (input.iapCount > 0 || input.subscriptionCount > 0)) {
+        actions.push("Consider promoted purchases for high-intent IAPs/subscriptions that should appear on the App Store.");
+    }
+    if (input.reviewCount > 0) {
+        actions.push("Mine recent customer reviews for keyword ideas, objection handling, and localization priorities.");
+    }
+    return actions;
 }
 function summarizeResource(resource) {
     if (!resource)

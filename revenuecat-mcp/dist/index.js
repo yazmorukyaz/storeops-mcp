@@ -295,6 +295,23 @@ server.registerTool("revenuecat_list_paywalls", {
 }, async ({ project_id, limit, starting_after, response_format }) => {
     return result(await revenueCatRequest("GET", `/projects/${encodeURIComponent(project_id)}/paywalls`, { limit, starting_after }), response_format);
 });
+server.registerTool("revenuecat_get_paywall", {
+    title: "Get RevenueCat Paywall",
+    description: "Fetches one RevenueCat paywall when the API key has paywall read permission.",
+    inputSchema: {
+        project_id: z.string().min(1),
+        paywall_id: z.string().min(1),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ project_id, paywall_id, response_format }) => {
+    return result(await revenueCatRequest("GET", `/projects/${encodeURIComponent(project_id)}/paywalls/${encodeURIComponent(paywall_id)}`), response_format);
+});
 server.registerTool("revenuecat_get_metrics_overview", {
     title: "Get RevenueCat Metrics Overview",
     description: "Fetches the RevenueCat project metrics overview endpoint when the key has access.",
@@ -310,6 +327,23 @@ server.registerTool("revenuecat_get_metrics_overview", {
     }
 }, async ({ project_id, response_format }) => {
     return result(await revenueCatRequest("GET", `/projects/${encodeURIComponent(project_id)}/metrics/overview`), response_format);
+});
+server.registerTool("revenuecat_audit_paywall_catalog", {
+    title: "Audit RevenueCat Paywall Catalog",
+    description: "Summarizes apps, products, packages, entitlements, offerings, paywalls, webhooks, and metrics so an agent can find paywall/catalog gaps.",
+    inputSchema: {
+        project_id: z.string().min(1),
+        customer_limit: z.number().int().min(1).max(100).default(10),
+        response_format: responseFormatSchema
+    },
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+    }
+}, async ({ project_id, customer_limit, response_format }) => {
+    return result(await auditPaywallCatalog(project_id, customer_limit), response_format);
 });
 server.registerTool("revenuecat_analyze_monetization_overview", {
     title: "Analyze RevenueCat Monetization Overview",
@@ -344,6 +378,95 @@ server.registerTool("revenuecat_get_subscriber", {
 }, async ({ app_user_id, response_format }) => {
     return result(await revenueCatRequest("GET", `/subscribers/${encodeURIComponent(app_user_id)}`, undefined, undefined, true), response_format);
 });
+async function auditPaywallCatalog(projectId, customerLimit) {
+    const [apps, products, packages, entitlements, offerings, customers, paywalls, metrics, webhooks] = await Promise.all([
+        safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/apps`, { limit: 100 }),
+        safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/products`, { limit: 100 }),
+        safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/packages`, { limit: 100, expand: "items.product" }),
+        safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/entitlements`, { limit: 100 }),
+        safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/offerings`, { limit: 100, expand: ["items.package", "items.package.product"] }),
+        safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/customers`, { limit: customerLimit }),
+        safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/paywalls`, { limit: 100 }),
+        safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/metrics/overview`),
+        safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/integrations/webhooks`, { limit: 100 })
+    ]);
+    const entitlementItems = safeItems(entitlements);
+    const offeringItems = safeItems(offerings);
+    const firstEntitlementId = getId(entitlementItems[0]);
+    const firstOfferingId = getId(offeringItems[0]);
+    const [firstEntitlementProducts, firstOfferingExpanded] = await Promise.all([
+        firstEntitlementId
+            ? safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/entitlements/${encodeURIComponent(firstEntitlementId)}/products`, { limit: 100 })
+            : Promise.resolve(undefined),
+        firstOfferingId
+            ? safeRevenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/offerings/${encodeURIComponent(firstOfferingId)}`, { expand: ["package", "package.product"] })
+            : Promise.resolve(undefined)
+    ]);
+    const productItems = safeItems(products);
+    const packageItems = safeItems(packages);
+    const paywallItems = safeItems(paywalls);
+    const issues = [];
+    if (productItems.length === 0)
+        issues.push("No products were returned. Add or import App Store / Google Play / Stripe products before paywall optimization.");
+    if (entitlementItems.length === 0)
+        issues.push("No entitlements were returned. Entitlements are the access layer that turns purchases into product value.");
+    if (offeringItems.length === 0)
+        issues.push("No offerings were returned. Offerings are required for remotely controlled paywall product mixes.");
+    if (packages.ok && packageItems.length === 0)
+        issues.push("No packages were returned from the direct package endpoint. Packages connect offerings to concrete products.");
+    if (paywallItems.length === 0)
+        issues.push("No paywalls were returned. Add RevenueCat Paywalls to remotely change conversion UI without app releases.");
+    if (firstEntitlementProducts && firstEntitlementProducts.ok && getItems(firstEntitlementProducts.response).length === 0) {
+        issues.push("The first entitlement has no attached products.");
+    }
+    return {
+        project_id: projectId,
+        counts: {
+            apps: safeCount(apps),
+            products: productItems.length,
+            direct_packages: packages.ok ? packageItems.length : null,
+            entitlements: entitlementItems.length,
+            offerings: offeringItems.length,
+            paywalls: paywallItems.length,
+            customers_returned: safeCount(customers),
+            webhook_integrations: webhooks.ok ? safeCount(webhooks) : null,
+            products_on_first_entitlement: firstEntitlementProducts ? safeCount(firstEntitlementProducts) : null
+        },
+        samples: {
+            first_app: summarizeItem(safeItems(apps)[0]),
+            first_product: summarizeItem(productItems[0]),
+            first_package: summarizeItem(packageItems[0]),
+            first_entitlement: summarizeItem(entitlementItems[0]),
+            first_offering: summarizeItem(offeringItems[0]),
+            first_paywall: summarizeItem(paywallItems[0]),
+            first_webhook: summarizeItem(safeItems(webhooks)[0])
+        },
+        fetchability: {
+            apps: apps.ok,
+            products: products.ok,
+            packages: packages.ok,
+            entitlements: entitlements.ok,
+            offerings: offerings.ok,
+            customers: customers.ok,
+            paywalls: paywalls.ok,
+            metrics_overview: metrics.ok,
+            webhook_integrations: webhooks.ok,
+            first_entitlement_products: firstEntitlementProducts ? firstEntitlementProducts.ok : null,
+            first_offering_expanded_packages_products: firstOfferingExpanded ? firstOfferingExpanded.ok : null
+        },
+        failures: Object.fromEntries(Object.entries({ apps, products, packages, entitlements, offerings, customers, paywalls, metrics, webhooks })
+            .filter(([, entry]) => !entry.ok)
+            .map(([key, entry]) => [key, entry.ok ? undefined : entry.error])),
+        issues,
+        marketing_value: [
+            "Map every App Store product to RevenueCat products, entitlements, offerings, packages, and paywalls.",
+            "Detect missing products/packages before users hit empty paywalls.",
+            "Review paywall readiness, webhook lifecycle tracking, and monetization metrics from one agent workflow.",
+            "Pair with App Store Connect localization tools to optimize subscription/IAP names, store copy, and paywall positioning together."
+        ],
+        metrics_overview: metrics.ok ? metrics.response.data : undefined
+    };
+}
 async function analyzeMonetizationOverview(projectId, customerLimit) {
     const [apps, products, entitlements, offerings, customers, paywalls, metrics] = await Promise.all([
         revenueCatRequest("GET", `/projects/${encodeURIComponent(projectId)}/apps`, { limit: 100 }),
@@ -422,6 +545,20 @@ async function revenueCatRequest(method, path, query, body, useV1 = false) {
         Authorization: `Bearer ${apiKey}`
     });
     return response;
+}
+async function safeRevenueCatRequest(method, path, query, body, useV1 = false) {
+    try {
+        return { ok: true, response: await revenueCatRequest(method, path, query, body, useV1) };
+    }
+    catch (error) {
+        return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
+}
+function safeItems(entry) {
+    return entry.ok ? getItems(entry.response) : [];
+}
+function safeCount(entry) {
+    return entry?.ok ? getItems(entry.response).length : 0;
 }
 async function requestJson(baseUrl, method, path, query, body, headers) {
     const url = buildUrl(baseUrl, path, query);

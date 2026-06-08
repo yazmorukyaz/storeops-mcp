@@ -2,7 +2,7 @@
 
 ![StoreOps MCP thumbnail](./assets/storeops-mcp-thumbnail.jpg)
 
-Automate App Store Connect and RevenueCat workflows from Codex or any MCP client.
+Automate App Store marketing, monetization, and product catalog work from Codex or any MCP client.
 
 StoreOps MCP contains two separate local MCP servers:
 
@@ -11,7 +11,14 @@ StoreOps MCP contains two separate local MCP servers:
 
 The servers are intentionally split because App Store Connect and RevenueCat have different auth models, permissions, APIs, and failure modes.
 
-Use it to make store operations easier to inspect, script, and automate: app metadata, builds, app versions, screenshots, in-app purchases, subscriptions, Sales and Trends reports, App Store analytics reports, RevenueCat projects, apps, products, entitlements, offerings, customers, paywalls, metrics overview, and monetization health checks.
+Use it as a store growth command layer: audit App Store listings, localizations, screenshots, IAPs, subscriptions, reviews, Sales and Trends, and Analytics Reports; then connect that store picture to RevenueCat products, entitlements, offerings, customers, paywalls, and metrics.
+
+The practical value is marketing leverage:
+
+- Find missing or weak localized App Store copy before launching campaigns.
+- Inspect screenshots, preview sets, custom product pages, promoted purchases, reviews, IAPs, and subscriptions from one agent workflow.
+- Compare App Store product/catalog setup with RevenueCat entitlements, offerings, paywalls, and monetization metrics.
+- Give an LLM safe read-first tools plus explicit update tools for App Store metadata and localization work.
 
 ## Security
 
@@ -121,6 +128,29 @@ For full RevenueCat analytics capacity, the key also needs permissions such as `
 - `appstoreconnect_list_apps`
 - `appstoreconnect_get_app_store_versions`
 - `appstoreconnect_list_builds`
+- `appstoreconnect_list_supported_locales`
+- `appstoreconnect_get_app`
+- `appstoreconnect_list_app_infos`
+- `appstoreconnect_list_app_info_localizations`
+- `appstoreconnect_list_app_store_version_localizations`
+- `appstoreconnect_get_localization_visuals`
+- `appstoreconnect_create_screenshot_set`
+- `appstoreconnect_create_app_store_version_localization`
+- `appstoreconnect_update_app_store_version_localization`
+- `appstoreconnect_update_app_info_localization`
+- `appstoreconnect_list_iaps`
+- `appstoreconnect_get_iap`
+- `appstoreconnect_list_iap_localizations`
+- `appstoreconnect_update_iap_localization`
+- `appstoreconnect_list_subscription_groups`
+- `appstoreconnect_list_subscriptions`
+- `appstoreconnect_list_subscription_localizations`
+- `appstoreconnect_update_subscription_localization`
+- `appstoreconnect_list_subscription_group_localizations`
+- `appstoreconnect_list_custom_product_pages`
+- `appstoreconnect_list_promoted_purchases`
+- `appstoreconnect_list_customer_reviews`
+- `appstoreconnect_audit_store_marketing`
 - `appstoreconnect_get_sales_reports`
 - `appstoreconnect_create_analytics_report_request`
 - `appstoreconnect_list_analytics_report_requests`
@@ -146,14 +176,20 @@ For full RevenueCat analytics capacity, the key also needs permissions such as `
 - `revenuecat_list_offerings`
 - `revenuecat_get_offering`
 - `revenuecat_list_customers`
-- `revenuecat_get_subscriber`
 - `revenuecat_get_customer`
 - `revenuecat_get_customer_subresource`
 - `revenuecat_list_paywalls`
+- `revenuecat_get_paywall`
 - `revenuecat_get_metrics_overview`
+- `revenuecat_audit_paywall_catalog`
 - `revenuecat_analyze_monetization_overview`
+- `revenuecat_get_subscriber`
 
 The generic request tools are included so agents can use API endpoints that do not yet have dedicated helper tools.
+
+`appstoreconnect_audit_store_marketing` is the broad store growth entry point. It summarizes app info, app version localizations, IAPs, subscription groups/subscriptions, custom product pages, promoted purchases, customer reviews, and Analytics Reports readiness.
+
+`revenuecat_audit_paywall_catalog` is the monetization entry point. It summarizes apps, products, entitlements, offerings, paywalls, customers, metrics, and checks whether the product-to-entitlement-to-offering chain is fetchable.
 
 The analytics tools support Apple's bulk Analytics Reports API flow: create or inspect report requests, list report definitions, list generated instances, list/download segments, decompress report files, parse rows, and inspect ASO-relevant reports such as discovery and engagement, downloads, purchases, subscriptions, installs/deletions, sessions, crashes, web preview engagement, and retention messaging.
 

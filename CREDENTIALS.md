@@ -22,7 +22,7 @@ ASC_PRIVATE_KEY_PATH=/absolute/path/AuthKey_XXXXXXXXXX.p8
 - `ASC_ISSUER_ID`: Issuer ID shown on the App Store Connect API page.
 - `ASC_PRIVATE_KEY_PATH`: Absolute path to the one-time downloaded `.p8` private key file.
 
-This is the App Store Connect REST API key used for app metadata, builds, TestFlight, screenshots, IAP/subscription setup, customer reviews, Sales and Trends reports, and Analytics Reports.
+This is the App Store Connect REST API key used for app metadata, app info localizations, app version localizations, screenshots, app previews, IAP/subscription setup, customer reviews, custom product pages, promoted purchases, builds, TestFlight, Sales and Trends reports, and Analytics Reports.
 
 ### Where To Get Them: Team API Key
 
@@ -68,6 +68,8 @@ Use the smallest role that supports your workflow.
 For Analytics Reports, Apple requires an App Store Connect API key with `Admin`, `Sales and Reports`, or `Finance`. Requesting a new Analytics Report type for the first time requires `Admin`; after the report type exists, `Sales and Reports` or `Finance` can download generated reports.
 
 For Sales and Trends downloads through `appstoreconnect_get_sales_reports`, use `Admin`, `Finance`, or a sales/reporting role that can access Sales and Trends data.
+
+For App Store listing and marketing automation, the key must have access to the relevant app and enough role permission to read or edit app metadata, screenshots, in-app purchases, and subscriptions. Use read-only audits first; use update tools only when the key role is allowed to modify those resources.
 
 ### Vendor Number For Sales Reports
 
@@ -166,10 +168,11 @@ In RevenueCat:
 
 Use a secret API key for server-side MCP operations. Do not use a public SDK key for write actions. RevenueCat also supports OAuth 2.0 access tokens for third-party tools; this MCP currently expects `REVENUECAT_API_KEY`.
 
-The dedicated RevenueCat tools use REST API v2 endpoints for projects, apps, products, entitlements, offerings, customers, customer subresources, paywalls, and metrics overview. Additional RevenueCat areas require extra permissions:
+The dedicated RevenueCat tools use REST API v2 endpoints for projects, apps, products, entitlements, offerings, customers, customer subresources, paywalls, and metrics overview. Additional RevenueCat areas require extra permissions or may not be available on every key/API surface:
 
 - Charts: `charts_metrics:charts:read`
 - Experiments: `project_configuration:experiments:read`
+- Webhook integrations: `project_configuration:integrations:read`
 - Virtual currencies: `project_configuration:virtual_currencies:read`
 
 Legacy API v1 subscriber endpoints may reject v2-only secret keys. If `revenuecat_get_subscriber` returns a v1 compatibility error, use the v2 customer tools instead.

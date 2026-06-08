@@ -2,7 +2,7 @@
 
 StoreOps plugin containing a stdio MCP server for App Store Connect API work.
 
-It includes helpers for App Store Connect Analytics Reports so agents can build ASO-style analysis workflows from Apple's bulk analytics exports.
+It gives agents a read-first App Store marketing surface: app metadata, localizations, screenshots, app previews, IAPs, subscriptions, custom product pages, promoted purchases, customer reviews, Sales and Trends, and Analytics Reports. It also includes explicit update tools for localized metadata where API permissions allow writes.
 
 ## Credentials
 
@@ -36,6 +36,29 @@ npm run build
 - `appstoreconnect_list_apps`
 - `appstoreconnect_get_app_store_versions`
 - `appstoreconnect_list_builds`
+- `appstoreconnect_list_supported_locales`
+- `appstoreconnect_get_app`
+- `appstoreconnect_list_app_infos`
+- `appstoreconnect_list_app_info_localizations`
+- `appstoreconnect_list_app_store_version_localizations`
+- `appstoreconnect_get_localization_visuals`
+- `appstoreconnect_create_screenshot_set`
+- `appstoreconnect_create_app_store_version_localization`
+- `appstoreconnect_update_app_store_version_localization`
+- `appstoreconnect_update_app_info_localization`
+- `appstoreconnect_list_iaps`
+- `appstoreconnect_get_iap`
+- `appstoreconnect_list_iap_localizations`
+- `appstoreconnect_update_iap_localization`
+- `appstoreconnect_list_subscription_groups`
+- `appstoreconnect_list_subscriptions`
+- `appstoreconnect_list_subscription_localizations`
+- `appstoreconnect_update_subscription_localization`
+- `appstoreconnect_list_subscription_group_localizations`
+- `appstoreconnect_list_custom_product_pages`
+- `appstoreconnect_list_promoted_purchases`
+- `appstoreconnect_list_customer_reviews`
+- `appstoreconnect_audit_store_marketing`
 - `appstoreconnect_get_sales_reports`
 - `appstoreconnect_create_analytics_report_request`
 - `appstoreconnect_list_analytics_report_requests`
@@ -45,6 +68,51 @@ npm run build
 - `appstoreconnect_get_analytics_report_segment`
 - `appstoreconnect_download_analytics_report_segment`
 - `appstoreconnect_analyze_aso_overview`
+
+## Store Marketing Workflow
+
+Start with:
+
+```text
+appstoreconnect_audit_store_marketing(app_id="<app_id>")
+```
+
+The audit summarizes app info, app info localizations, app version localizations, localized screenshots/previews, IAPs, subscriptions, custom product pages, promoted purchases, customer reviews, and Analytics Report readiness.
+
+Use these tools to drill into copy and creative assets:
+
+```text
+appstoreconnect_list_supported_locales
+appstoreconnect_list_app_info_localizations
+appstoreconnect_list_app_store_version_localizations
+appstoreconnect_get_localization_visuals
+appstoreconnect_list_customer_reviews
+```
+
+Use these tools to inspect monetized store surfaces:
+
+```text
+appstoreconnect_list_iaps
+appstoreconnect_get_iap
+appstoreconnect_list_iap_localizations
+appstoreconnect_list_subscription_groups
+appstoreconnect_list_subscriptions
+appstoreconnect_list_subscription_localizations
+appstoreconnect_list_promoted_purchases
+```
+
+Write tools are intentionally explicit:
+
+```text
+appstoreconnect_create_app_store_version_localization
+appstoreconnect_update_app_store_version_localization
+appstoreconnect_update_app_info_localization
+appstoreconnect_update_iap_localization
+appstoreconnect_update_subscription_localization
+appstoreconnect_create_screenshot_set
+```
+
+Do read-only inspection first, then use writes only with exact resource IDs and reviewed copy.
 
 ### Sales & Downloads Reports
 

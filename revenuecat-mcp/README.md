@@ -2,6 +2,8 @@
 
 StoreOps plugin containing a stdio MCP server for RevenueCat API work.
 
+It gives agents a monetization and paywall catalog surface: projects, apps, products, entitlements, offerings, customers, customer purchases/subscriptions/entitlements, paywalls, metrics overview, and catalog health audits.
+
 ## Credentials
 
 ```sh
@@ -40,7 +42,9 @@ npm run build
 - `revenuecat_get_customer`
 - `revenuecat_get_customer_subresource`
 - `revenuecat_list_paywalls`
+- `revenuecat_get_paywall`
 - `revenuecat_get_metrics_overview`
+- `revenuecat_audit_paywall_catalog`
 - `revenuecat_analyze_monetization_overview`
 - `revenuecat_get_subscriber`
 
@@ -52,6 +56,12 @@ Start with:
 revenuecat_analyze_monetization_overview(project_id="proj...")
 ```
 
+For a marketing-focused catalog health check, start with:
+
+```text
+revenuecat_audit_paywall_catalog(project_id="proj...")
+```
+
 This fetches and summarizes apps, products, entitlements, offerings, customers, paywalls, metrics overview, entitlement products, expanded offering package/product data, and the first customer's purchase/subscription/entitlement subresources.
 
 Use dedicated read tools to drill into catalog and customer state:
@@ -59,8 +69,9 @@ Use dedicated read tools to drill into catalog and customer state:
 ```text
 revenuecat_list_products
 revenuecat_get_offering
+revenuecat_get_paywall
 revenuecat_get_customer_subresource
 revenuecat_get_metrics_overview
 ```
 
-The v2 key used by this MCP may not be compatible with RevenueCat API v1 subscriber endpoints. Chart data, experiments, and virtual currencies require extra RevenueCat API permissions such as `charts_metrics:charts:read`, `project_configuration:experiments:read`, and `project_configuration:virtual_currencies:read`.
+The v2 key used by this MCP may not be compatible with RevenueCat API v1 subscriber endpoints. Chart data, experiments, webhook integrations, direct package listing, and virtual currencies can require extra RevenueCat API permissions or API surfaces that are not available to every key. The verified dedicated tools focus on projects, apps, products, entitlements, offerings, customers, paywalls, and metrics overview.
