@@ -51,7 +51,8 @@ npm run build
 `appstoreconnect_get_sales_reports` downloads the gzipped Sales and Trends TSV report,
 unzips and parses it into JSON, and adds a units/downloads summary (`total_units`,
 `app_downloads`, and `units_by_product_type`). Pass `sku` or `apple_id` to scope the
-result to a single app.
+result to a single app. The tool defaults to report version `1_1` for daily/weekly
+reports and `1_0` for monthly/yearly reports.
 
 > Sales and Trends reports require an API key with **Admin**, **Finance**, or **Sales**
 > access. Keys limited to App Manager/Developer roles return HTTP 403. The `vendor_number`

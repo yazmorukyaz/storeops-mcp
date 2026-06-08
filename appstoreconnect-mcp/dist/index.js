@@ -161,7 +161,7 @@ server.registerTool("appstoreconnect_get_sales_reports", {
         report_date: z.string().min(1).describe("Report date. DAILY/WEEKLY: YYYY-MM-DD; MONTHLY: YYYY-MM; YEARLY: YYYY."),
         report_type: z.string().default("SALES").describe("Apple reportType (e.g. SALES, SUBSCRIPTION, SUBSCRIPTION_EVENT)."),
         report_sub_type: z.string().default("SUMMARY").describe("Apple reportSubType (e.g. SUMMARY, DETAILED)."),
-        version: z.string().default("1_1").describe("Apple report version."),
+        version: z.string().optional().describe("Apple report version. Defaults to 1_1 for DAILY/WEEKLY and 1_0 for MONTHLY/YEARLY."),
         sku: z.string().optional().describe("Optional: only include rows matching this app SKU."),
         apple_id: z.string().optional().describe("Optional: only include rows matching this Apple Identifier (numeric app id)."),
         include_rows: z.boolean().default(true).describe("When false, returns only the summary and omits raw rows."),
@@ -178,9 +178,10 @@ server.registerTool("appstoreconnect_get_sales_reports", {
     if (!resolvedVendorNumber) {
         throw new Error("Missing vendor number. Pass vendor_number or set ASC_VENDOR_NUMBER.");
     }
-    const report = await getSalesReport({ vendor_number: resolvedVendorNumber, frequency, report_date, report_type, report_sub_type, version });
+    const resolvedVersion = version ?? (frequency === "MONTHLY" || frequency === "YEARLY" ? "1_0" : "1_1");
+    const report = await getSalesReport({ vendor_number: resolvedVendorNumber, frequency, report_date, report_type, report_sub_type, version: resolvedVersion });
     if (!report.available) {
-        return result({ vendor_number: resolvedVendorNumber, frequency, report_date, report_type, report_sub_type, version, available: false, message: report.message }, response_format);
+        return result({ vendor_number: resolvedVendorNumber, frequency, report_date, report_type, report_sub_type, version: resolvedVersion, available: false, message: report.message }, response_format);
     }
     let rows = report.rows;
     if (sku)
@@ -194,7 +195,7 @@ server.registerTool("appstoreconnect_get_sales_reports", {
         report_date,
         report_type,
         report_sub_type,
-        version,
+        version: resolvedVersion,
         available: true,
         row_count: rows.length,
         summary,
