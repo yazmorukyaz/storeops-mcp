@@ -11,7 +11,7 @@ StoreOps MCP contains two separate local MCP servers:
 
 The servers are intentionally split because App Store Connect and RevenueCat have different auth models, permissions, APIs, and failure modes.
 
-Use it to make store operations easier to inspect, script, and automate: app metadata, builds, app versions, screenshots, in-app purchases, subscriptions, App Store analytics reports, RevenueCat projects, customers, offerings, packages, and entitlements.
+Use it to make store operations easier to inspect, script, and automate: app metadata, builds, app versions, screenshots, in-app purchases, subscriptions, Sales and Trends reports, App Store analytics reports, RevenueCat projects, apps, products, entitlements, offerings, customers, paywalls, metrics overview, and monetization health checks.
 
 ## Security
 
