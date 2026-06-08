@@ -70,6 +70,12 @@ ASC_ISSUER_ID=
 ASC_PRIVATE_KEY_PATH=/absolute/path/AuthKey_XXXXXXXXXX.p8
 ```
 
+As of June 2026, App Store Connect API keys are created under **Users and Access -> Integrations -> App Store Connect API**. Apple supports team API keys and individual API keys:
+
+- Team API keys require Account Holder or Admin access to create and can be assigned a role such as Admin, App Manager, Sales and Reports, or Finance.
+- Individual API keys are created from the signed-in user's profile and inherit that user's App Store Connect permissions. Each user can have one active individual key.
+- Apple private `.p8` keys are one-time downloads. If the file is lost, revoke the key and create a new one.
+
 Recommended role:
 
 - `Admin` for broad automation.
@@ -79,11 +85,14 @@ Recommended role:
 Optional credentials:
 
 ```sh
+ASC_VENDOR_NUMBER=
 APPLE_IAP_KEY_ID=
 APPLE_IAP_ISSUER_ID=
 APPLE_IAP_PRIVATE_KEY_PATH=/absolute/path/SubscriptionKey_XXXXXXXXXX.p8
 APPLE_SHARED_SECRET=
 ```
+
+Use `ASC_VENDOR_NUMBER` for Sales and Trends report downloads. You can find it in App Store Connect under **Payments and Financial Reports**.
 
 Use an Apple In-App Purchase key for App Store Server API / RevenueCat integration workflows. Use a shared secret only for legacy subscription validation flows that still require it.
 
@@ -96,6 +105,8 @@ REVENUECAT_API_KEY=
 ```
 
 Use a RevenueCat secret API key for server-side read/write operations. Do not use a public SDK key for write actions.
+
+Create it in the RevenueCat dashboard under the target project's API key settings. Public SDK keys are for app clients; secret keys and OAuth access tokens are for trusted server-side tools.
 
 ## Tools
 

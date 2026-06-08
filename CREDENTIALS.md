@@ -2,6 +2,8 @@
 
 StoreOps MCP does not ship with credentials. Each user must create their own provider keys and keep them local.
 
+These instructions reflect Apple's App Store Connect layout as of June 2026.
+
 ## App Store Connect MCP
 
 Used by `appstoreconnect-mcp` for App Store Connect API calls.
@@ -14,7 +16,15 @@ ASC_ISSUER_ID=
 ASC_PRIVATE_KEY_PATH=/absolute/path/AuthKey_XXXXXXXXXX.p8
 ```
 
-### Where To Get Them
+### What These Values Mean
+
+- `ASC_KEY_ID`: Key ID shown next to the App Store Connect API key.
+- `ASC_ISSUER_ID`: Issuer ID shown on the App Store Connect API page.
+- `ASC_PRIVATE_KEY_PATH`: Absolute path to the one-time downloaded `.p8` private key file.
+
+This is the App Store Connect REST API key used for app metadata, builds, TestFlight, screenshots, IAP/subscription setup, customer reviews, Sales and Trends reports, and Analytics Reports.
+
+### Where To Get Them: Team API Key
 
 In App Store Connect:
 
@@ -22,10 +32,28 @@ In App Store Connect:
 2. Go to **Users and Access**.
 3. Open **Integrations**.
 4. Open **App Store Connect API**.
-5. Create a team API key or use an existing one.
-6. Copy the **Issuer ID**.
-7. Copy the **Key ID**.
-8. Download the `.p8` private key when creating a new key.
+5. If API access has not been enabled yet, the Account Holder must click **Request Access** and accept Apple's API terms.
+6. Open **Team Keys**.
+7. Click **Generate API Key** or the add button.
+8. Enter a reference name.
+9. Under **Access**, choose the role.
+10. Click **Generate**.
+11. Copy the **Issuer ID**.
+12. Copy the **Key ID**.
+13. Download the `.p8` private key immediately.
+
+Team keys can apply across all apps in the account. Apple notes that team API key app access can't be limited per app, so choose the smallest role that supports your workflow.
+
+### Where To Get Them: Individual API Key
+
+In App Store Connect:
+
+1. Click your username in the top-right corner.
+2. Open **Edit Profile**.
+3. Under **Individual API Key**, click **Generate Key**.
+4. Download the `.p8` private key immediately.
+
+Individual API keys inherit the user's App Store Connect permissions. Each user can only have one active individual API key at a time. Admins or the Account Holder can disable a user's ability to generate individual keys.
 
 Apple private keys are one-time downloads. If the `.p8` file is lost, create a new API key and revoke the old one if it is no longer needed.
 
@@ -39,9 +67,27 @@ Use the smallest role that supports your workflow.
 
 For Analytics Reports, Apple requires an App Store Connect API key with `Admin`, `Sales and Reports`, or `Finance`. Requesting a new Analytics Report type for the first time requires `Admin`; after the report type exists, `Sales and Reports` or `Finance` can download generated reports.
 
+For Sales and Trends downloads through `appstoreconnect_get_sales_reports`, use `Admin`, `Finance`, or a sales/reporting role that can access Sales and Trends data.
+
+### Vendor Number For Sales Reports
+
+Optional but recommended:
+
+```sh
+ASC_VENDOR_NUMBER=
+```
+
+Use this for Sales and Trends report downloads. Find it in App Store Connect under **Payments and Financial Reports**. You can also pass `vendor_number` directly to `appstoreconnect_get_sales_reports`.
+
+### Analytics Reports Timing
+
+Analytics Reports are not instant. `ONGOING` requests generate recurring daily, weekly, and monthly reports; Apple says the first report usually appears about 24-48 hours later. `ONE_TIME_SNAPSHOT` requests provide historical data once. Data for a specific day is considered complete two days after the reporting date.
+
 ### Official Docs
 
 - App Store Connect API: https://developer.apple.com/documentation/appstoreconnectapi
+- App Store Connect API setup: https://developer.apple.com/help/app-store-connect/get-started/app-store-connect-api/
+- Analytics Reports API overview: https://developer.apple.com/help/app-store-connect-analytics/overview/analytics-reports-api
 - App Store Server API key creation: https://developer.apple.com/documentation/appstoreserverapi/creating-api-keys-to-authorize-api-requests
 - Role permissions: https://developer.apple.com/help/app-store-connect/reference/role-permissions/
 
@@ -63,11 +109,13 @@ In App Store Connect:
 
 1. Open **Users and Access**.
 2. Open **Integrations**.
-3. Open **In-App Purchase**.
-4. Create an In-App Purchase key.
-5. Copy the **Issuer ID**.
-6. Copy the **Key ID**.
-7. Download the `.p8` private key.
+3. In the sidebar under **Keys**, open **In-App Purchase**.
+4. Click **Generate In-App Purchase Key**. If an active key already exists, use the add button to create another.
+5. Enter a reference name.
+6. Click **Generate**.
+7. Copy the **Issuer ID**.
+8. Copy the **Key ID**.
+9. Download the `.p8` private key immediately.
 
 One In-App Purchase key can generally support server-side purchase workflows across the account/team. You do not need one key per app. The products and subscriptions themselves are still configured per app.
 
@@ -113,10 +161,10 @@ In RevenueCat:
 
 1. Open the RevenueCat dashboard.
 2. Select the target project.
-3. Open **API keys**.
+3. Open the project's API key or authentication settings.
 4. Create or copy a **Secret API key**.
 
-Use a secret API key for server-side MCP operations. Do not use a public SDK key for write actions.
+Use a secret API key for server-side MCP operations. Do not use a public SDK key for write actions. RevenueCat also supports OAuth 2.0 access tokens for third-party tools; this MCP currently expects `REVENUECAT_API_KEY`.
 
 ### Official Docs
 
