@@ -66,13 +66,13 @@ Use `appstoreconnect_analyze_aso_overview` first. It checks whether the app has 
 Typical flow:
 
 ```text
-appstoreconnect_analyze_aso_overview(app_id="6749593217")
+appstoreconnect_analyze_aso_overview(app_id="<app_id>")
 ```
 
 If no report request exists, create one:
 
 ```text
-appstoreconnect_create_analytics_report_request(app_id="6749593217", access_type="ONGOING")
+appstoreconnect_create_analytics_report_request(app_id="<app_id>", access_type="ONGOING")
 ```
 
 Apple usually needs 1-2 days before the first generated instances are available. Once instances exist, use:
