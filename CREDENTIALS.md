@@ -33,8 +33,11 @@ Apple private keys are one-time downloads. If the `.p8` file is lost, create a n
 
 - `Admin`: broadest automation coverage.
 - `App Manager`: can cover many app metadata, in-app purchase, subscription, build, and review workflows.
+- `Sales and Reports` or `Finance`: useful for downloading already-requested Analytics Reports.
 
 Use the smallest role that supports your workflow.
+
+For Analytics Reports, Apple requires an App Store Connect API key with `Admin`, `Sales and Reports`, or `Finance`. Requesting a new Analytics Report type for the first time requires `Admin`; after the report type exists, `Sales and Reports` or `Finance` can download generated reports.
 
 ### Official Docs
 

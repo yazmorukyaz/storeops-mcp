@@ -2,6 +2,8 @@
 
 StoreOps plugin containing a stdio MCP server for App Store Connect API work.
 
+It includes helpers for App Store Connect Analytics Reports so agents can build ASO-style analysis workflows from Apple's bulk analytics exports.
+
 ## Credentials
 
 ```sh
@@ -35,8 +37,16 @@ npm run build
 - `appstoreconnect_get_app_store_versions`
 - `appstoreconnect_list_builds`
 - `appstoreconnect_get_sales_reports`
+- `appstoreconnect_create_analytics_report_request`
+- `appstoreconnect_list_analytics_report_requests`
+- `appstoreconnect_list_analytics_reports`
+- `appstoreconnect_list_analytics_report_instances`
+- `appstoreconnect_list_analytics_report_segments`
+- `appstoreconnect_get_analytics_report_segment`
+- `appstoreconnect_download_analytics_report_segment`
+- `appstoreconnect_analyze_aso_overview`
 
-### Sales & downloads reports
+### Sales & Downloads Reports
 
 `appstoreconnect_get_sales_reports` downloads the gzipped Sales and Trends TSV report,
 unzips and parses it into JSON, and adds a units/downloads summary (`total_units`,
@@ -47,3 +57,30 @@ result to a single app.
 > access. Keys limited to App Manager/Developer roles return HTTP 403. The `vendor_number`
 > is shown in App Store Connect under *Payments and Financial Reports*; set it once via the
 > `ASC_VENDOR_NUMBER` environment variable so you can omit it on each call.
+
+## Analytics / ASO Workflow
+
+Use `appstoreconnect_analyze_aso_overview` first. It checks whether the app has Analytics Report Requests, finds ASO-relevant reports, and reports whether downloadable instances exist.
+
+Typical flow:
+
+```text
+appstoreconnect_analyze_aso_overview(app_id="6749593217")
+```
+
+If no report request exists, create one:
+
+```text
+appstoreconnect_create_analytics_report_request(app_id="6749593217", access_type="ONGOING")
+```
+
+Apple usually needs 1-2 days before the first generated instances are available. Once instances exist, use:
+
+```text
+appstoreconnect_list_analytics_reports
+appstoreconnect_list_analytics_report_instances
+appstoreconnect_list_analytics_report_segments
+appstoreconnect_download_analytics_report_segment
+```
+
+The download tool decompresses Apple report segments and parses tab- or comma-delimited rows. Keep `max_rows` small for exploration, then fetch larger batches when you know which report and date you need.

@@ -6,12 +6,12 @@ Automate App Store Connect and RevenueCat workflows from Codex or any MCP client
 
 StoreOps MCP contains two separate local MCP servers:
 
-- [`appstoreconnect-mcp`](./appstoreconnect-mcp): App Store Connect API tools for apps, builds, app versions, metadata, screenshots, in-app purchases, subscriptions, pricing, and review workflows.
+- [`appstoreconnect-mcp`](./appstoreconnect-mcp): App Store Connect API tools for apps, builds, app versions, metadata, screenshots, in-app purchases, subscriptions, pricing, customer reviews, and Analytics Reports for ASO-style analysis.
 - [`revenuecat-mcp`](./revenuecat-mcp): RevenueCat API tools for projects, customers, products, offerings, packages, and entitlements.
 
 The servers are intentionally split because App Store Connect and RevenueCat have different auth models, permissions, APIs, and failure modes.
 
-Use it to make store operations easier to inspect, script, and automate: app metadata, builds, app versions, screenshots, in-app purchases, subscriptions, RevenueCat projects, customers, offerings, packages, and entitlements.
+Use it to make store operations easier to inspect, script, and automate: app metadata, builds, app versions, screenshots, in-app purchases, subscriptions, App Store analytics reports, RevenueCat projects, customers, offerings, packages, and entitlements.
 
 ## Security
 
@@ -74,6 +74,7 @@ Recommended role:
 
 - `Admin` for broad automation.
 - `App Manager` for many app metadata, IAP, and subscription workflows.
+- `Sales and Reports` or `Finance` for downloading already-requested Analytics Reports. `Admin` is required when requesting a new Analytics Report type for the first time.
 
 Optional credentials:
 
@@ -105,6 +106,15 @@ Use a RevenueCat secret API key for server-side read/write operations. Do not us
 - `appstoreconnect_list_apps`
 - `appstoreconnect_get_app_store_versions`
 - `appstoreconnect_list_builds`
+- `appstoreconnect_get_sales_reports`
+- `appstoreconnect_create_analytics_report_request`
+- `appstoreconnect_list_analytics_report_requests`
+- `appstoreconnect_list_analytics_reports`
+- `appstoreconnect_list_analytics_report_instances`
+- `appstoreconnect_list_analytics_report_segments`
+- `appstoreconnect_get_analytics_report_segment`
+- `appstoreconnect_download_analytics_report_segment`
+- `appstoreconnect_analyze_aso_overview`
 
 ### `revenuecat-mcp`
 
@@ -114,6 +124,8 @@ Use a RevenueCat secret API key for server-side read/write operations. Do not us
 - `revenuecat_get_subscriber`
 
 The generic request tools are included so agents can use API endpoints that do not yet have dedicated helper tools.
+
+The analytics tools support Apple's bulk Analytics Reports API flow: create or inspect report requests, list report definitions, list generated instances, list/download segments, decompress report files, parse rows, and inspect ASO-relevant reports such as discovery and engagement, downloads, purchases, subscriptions, installs/deletions, sessions, crashes, web preview engagement, and retention messaging.
 
 ## Manual Smoke Tests
 
