@@ -7,7 +7,7 @@ Automate App Store Connect and RevenueCat workflows from Codex or any MCP client
 StoreOps MCP contains two separate local MCP servers:
 
 - [`appstoreconnect-mcp`](./appstoreconnect-mcp): App Store Connect API tools for apps, builds, app versions, metadata, screenshots, in-app purchases, subscriptions, pricing, customer reviews, and Analytics Reports for ASO-style analysis.
-- [`revenuecat-mcp`](./revenuecat-mcp): RevenueCat API tools for projects, customers, products, offerings, packages, and entitlements.
+- [`revenuecat-mcp`](./revenuecat-mcp): RevenueCat API tools for projects, apps, products, entitlements, offerings, customers, customer subresources, paywalls, metrics overview, and monetization analysis.
 
 The servers are intentionally split because App Store Connect and RevenueCat have different auth models, permissions, APIs, and failure modes.
 
@@ -108,6 +108,8 @@ Use a RevenueCat secret API key for server-side read/write operations. Do not us
 
 Create it in the RevenueCat dashboard under the target project's API key settings. Public SDK keys are for app clients; secret keys and OAuth access tokens are for trusted server-side tools.
 
+For full RevenueCat analytics capacity, the key also needs permissions such as `charts_metrics:charts:read`, `project_configuration:experiments:read`, and `project_configuration:virtual_currencies:read`. The included dedicated tools focus on endpoints that are fetchable with a standard v2 secret key.
+
 ## Tools
 
 ### `appstoreconnect-mcp`
@@ -132,7 +134,22 @@ Create it in the RevenueCat dashboard under the target project's API key setting
 - `revenuecat_auth_status`
 - `revenuecat_request`
 - `revenuecat_list_projects`
+- `revenuecat_list_apps`
+- `revenuecat_get_app`
+- `revenuecat_list_products`
+- `revenuecat_get_product`
+- `revenuecat_list_entitlements`
+- `revenuecat_get_entitlement`
+- `revenuecat_list_entitlement_products`
+- `revenuecat_list_offerings`
+- `revenuecat_get_offering`
+- `revenuecat_list_customers`
 - `revenuecat_get_subscriber`
+- `revenuecat_get_customer`
+- `revenuecat_get_customer_subresource`
+- `revenuecat_list_paywalls`
+- `revenuecat_get_metrics_overview`
+- `revenuecat_analyze_monetization_overview`
 
 The generic request tools are included so agents can use API endpoints that do not yet have dedicated helper tools.
 

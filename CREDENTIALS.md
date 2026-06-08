@@ -166,6 +166,14 @@ In RevenueCat:
 
 Use a secret API key for server-side MCP operations. Do not use a public SDK key for write actions. RevenueCat also supports OAuth 2.0 access tokens for third-party tools; this MCP currently expects `REVENUECAT_API_KEY`.
 
+The dedicated RevenueCat tools use REST API v2 endpoints for projects, apps, products, entitlements, offerings, customers, customer subresources, paywalls, and metrics overview. Additional RevenueCat areas require extra permissions:
+
+- Charts: `charts_metrics:charts:read`
+- Experiments: `project_configuration:experiments:read`
+- Virtual currencies: `project_configuration:virtual_currencies:read`
+
+Legacy API v1 subscriber endpoints may reject v2-only secret keys. If `revenuecat_get_subscriber` returns a v1 compatibility error, use the v2 customer tools instead.
+
 ### Official Docs
 
 - RevenueCat API keys and authentication: https://www.revenuecat.com/docs/projects/authentication
