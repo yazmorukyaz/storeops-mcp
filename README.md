@@ -29,6 +29,8 @@ Each plugin includes a `.env.example`. Copy it to `.env` locally and fill in you
 
 For step-by-step instructions on where to get each key, see [`CREDENTIALS.md`](./CREDENTIALS.md).
 
+For an LLM-ready copy-paste briefing that covers tools, credentials, workflows, safety rules, and known limitations, see [`LLM_CONTEXT.md`](./LLM_CONTEXT.md).
+
 ## Requirements
 
 - Node.js 20 or newer
