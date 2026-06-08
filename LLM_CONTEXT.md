@@ -226,6 +226,228 @@ If v1 subscriber tools return a compatibility error, use the v2 customer tools i
 - `revenuecat_analyze_monetization_overview`
 - `revenuecat_get_subscriber`
 
+## Ability Matrix
+
+This section explains what StoreOps MCP can actually help an LLM do.
+
+### App Store Connect Abilities
+
+`appstoreconnect-mcp` can:
+
+- Verify App Store Connect credentials without printing secrets.
+- Sign and validate App Store Connect JWTs.
+- List App Store Connect apps visible to the API key.
+- Fetch App Store versions for an app.
+- List builds for an app or account.
+- Make generic authenticated App Store Connect REST API requests.
+- Download and parse Sales and Trends reports.
+- Summarize Sales and Trends totals:
+  - row count
+  - total units
+  - app downloads
+  - units by product type
+  - optional raw rows
+- List Analytics Report Requests for an app.
+- List Analytics Report definitions.
+- List generated Analytics Report instances.
+- List generated Analytics Report segments.
+- Fetch Analytics Report segment metadata and temporary download URL.
+- Download, decompress, and parse Analytics Report segment rows when segments exist.
+- Run an ASO readiness overview:
+  - check report request availability
+  - identify ASO-relevant report definitions
+  - check generated instance availability
+  - check downloadable segment availability
+  - explain the next action
+
+### App Store Connect Analysis It Enables
+
+Use App Store Connect data for:
+
+- Store visibility and funnel analysis.
+- First-time downloads and redownloads.
+- App Store impressions and product page views through Analytics Reports when instances are generated.
+- App Store conversion analysis.
+- Sales and Trends download/unit reports.
+- Product-type breakdowns for free downloads, paid downloads, updates, and IAP-related rows.
+- Build/version inventory.
+- ASO readiness checks.
+- Store analytics export readiness.
+- Reconciliation against RevenueCat monetization data.
+
+### App Store Connect Confirmed Working In Local Verification
+
+These were verified with local credentials during development:
+
+- Auth/JWT signing works.
+- App listing works.
+- App Store version listing works.
+- Build listing works.
+- Sales and Trends daily reports work with `ASC_VENDOR_NUMBER`.
+- Sales and Trends monthly reports work with `ASC_VENDOR_NUMBER`.
+- Analytics Report Requests list successfully.
+- Analytics Report definitions list successfully.
+- ASO overview runs successfully.
+
+Observed caveat:
+
+- Analytics Report definitions existed, but generated instances/segments were not yet available. Segment listing/downloading tools are implemented, but need Apple to generate report instances first.
+
+### App Store Connect Write / Mutation Abilities
+
+The generic `appstoreconnect_request` tool can technically call write endpoints if the key has permission, but the current dedicated tools are intentionally read-first except:
+
+- `appstoreconnect_create_analytics_report_request`
+
+Treat this as a write action because it creates a report request. Ask for explicit user approval before running it.
+
+Future dedicated write tools can be added for:
+
+- app metadata
+- localizations
+- keywords
+- screenshots
+- app previews
+- in-app purchases
+- subscriptions
+- pricing
+- availability
+- review submissions
+
+Do not assume those write flows are fully dedicated-tool implemented unless the repo adds explicit tools for them. Use generic requests carefully with exact method/path/body confirmation.
+
+### RevenueCat Abilities
+
+`revenuecat-mcp` can:
+
+- Verify that a RevenueCat API key is present without printing it.
+- Make generic authenticated RevenueCat REST API requests.
+- List RevenueCat projects.
+- List apps in a project.
+- Fetch a single app.
+- List products in a project.
+- Fetch a single product.
+- List entitlements.
+- Fetch a single entitlement.
+- List products attached to an entitlement.
+- List offerings.
+- Fetch an offering with expanded package and product data.
+- List customers.
+- Fetch a single customer.
+- Fetch customer subresources:
+  - active entitlements
+  - aliases
+  - attributes
+  - subscriptions
+  - purchases
+  - invoices
+- List paywalls.
+- Fetch metrics overview.
+- Run a monetization overview:
+  - count apps, products, entitlements, offerings, customers, paywalls
+  - fetch entitlement products
+  - fetch expanded offering data
+  - fetch first customer purchase/subscription/entitlement state
+  - fetch metrics overview
+  - summarize fetchability
+
+### RevenueCat Analysis It Enables
+
+Use RevenueCat data for:
+
+- Product catalog audit.
+- Entitlement coverage audit.
+- Offering and package audit.
+- Paywall inventory.
+- Customer purchase/subscription state.
+- Customer entitlement state.
+- RevenueCat-side monetization health.
+- Checking whether products are attached to entitlements.
+- Checking whether offerings expose the expected products/packages.
+- Reconciliation against App Store Connect Sales and Trends.
+- Diagnosing mismatches between App Store purchases and RevenueCat customer state.
+
+### RevenueCat Confirmed Working In Local Verification
+
+These were verified with local credentials during development:
+
+- Project listing works.
+- App listing and single-app fetch work.
+- Product listing and single-product fetch work.
+- Entitlement listing and single-entitlement fetch work.
+- Entitlement products listing works.
+- Offering listing and expanded offering fetch work.
+- Customer listing and single-customer fetch work.
+- Customer active entitlements, aliases, attributes, subscriptions, purchases, and invoices fetch work.
+- Paywall listing works.
+- Metrics overview works.
+- Monetization overview works.
+
+Observed local counts from the verified project included:
+
+- apps: `3`
+- products: `14`
+- entitlements: `1`
+- offerings: `2`
+- paywalls: `2`
+- first entitlement products: `8`
+
+These counts are examples from one account and can change.
+
+### RevenueCat Permission-Dependent Abilities
+
+RevenueCat supports more than the dedicated fetchable tools, but the API key must have permission.
+
+These areas require extra permissions:
+
+- Charts: `charts_metrics:charts:read`
+- Experiments: `project_configuration:experiments:read`
+- Virtual currencies: `project_configuration:virtual_currencies:read`
+
+Do not claim these are working unless the user has a key with those permissions and live checks return success.
+
+### RevenueCat Legacy v1 Caveat
+
+`revenuecat_get_subscriber` uses the legacy v1 subscriber endpoint. Some v2 secret keys are incompatible with v1 endpoints. If it fails or returns an empty/unsupported response, prefer the v2 customer tools:
+
+- `revenuecat_get_customer`
+- `revenuecat_get_customer_subresource`
+
+### Combined StoreOps Abilities
+
+Using both plugins together, an LLM can:
+
+- Check whether App Store Connect and RevenueCat credentials work.
+- Map App Store apps to RevenueCat projects/apps.
+- Fetch App Store versions and builds.
+- Fetch App Store Sales and Trends reports.
+- Fetch App Store Analytics Report readiness.
+- Fetch RevenueCat catalog, offerings, entitlements, paywalls, and customer state.
+- Compare App Store download/unit data with RevenueCat monetization setup.
+- Find catalog gaps:
+  - product exists in App Store but not RevenueCat
+  - RevenueCat product lacks entitlement
+  - entitlement lacks expected products
+  - offering/paywall points to unexpected products
+- Find analytics gaps:
+  - App Store Analytics Reports requested but not generated yet
+  - RevenueCat charts unavailable due to missing permissions
+  - Sales reports unavailable due to missing vendor number
+- Prepare next-step recommendations for ASO, paywall, monetization, and store operations.
+
+### What StoreOps MCP Is Not
+
+It is not:
+
+- A Search Ads API client.
+- A keyword-rank tracker.
+- A competitor ASO scraper.
+- A replacement for App Store Connect UI review approval flows.
+- A guarantee that every App Store Connect write endpoint is already wrapped in a dedicated tool.
+- A RevenueCat dashboard replacement for permission areas not granted to the key.
+
+For keyword rank, competitor ASO, or Search Ads performance, add a dedicated Search Ads/ASO data provider integration.
+
 ## Recommended LLM Workflow
 
 ### 1. Check Auth
