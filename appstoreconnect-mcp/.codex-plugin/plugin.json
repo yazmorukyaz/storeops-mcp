@@ -1,22 +1,22 @@
 {
   "name": "appstoreconnect-mcp",
   "version": "0.1.0",
-  "description": "StoreOps MCP tools for the App Store Connect API.",
+  "description": "StoreOps MCP tools for App Store metadata, IAPs, subscriptions, localization, reviews, reports, and ASO operations.",
   "author": {
     "name": "Local developer"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "StoreOps App Store Connect",
-    "shortDescription": "Automate App Store Connect workflows in Codex.",
-    "longDescription": "StoreOps MCP adds a local stdio MCP server for authenticated App Store Connect API workflows. Credentials are read from environment variables.",
+    "shortDescription": "Manage App Store metadata, IAPs, subscriptions, and ASO workflows.",
+    "longDescription": "StoreOps MCP adds a local stdio MCP server for authenticated App Store Connect operations: apps, versions, builds, metadata, localizations, screenshots, IAPs, subscriptions, custom product pages, promoted purchases, reviews, Sales and Trends reports, Analytics Reports, and explicit metadata/localization writes. Credentials are read from environment variables.",
     "developerName": "Local developer",
     "category": "Productivity",
     "capabilities": [
       "mcp",
       "api-tools"
     ],
-    "defaultPrompt": "Use StoreOps App Store Connect tools to inspect apps, builds, versions, and API resources."
+    "defaultPrompt": "Use StoreOps App Store Connect tools to audit my app metadata, localizations, screenshots, IAPs, subscriptions, reviews, and analytics readiness before making any writes."
   },
   "mcpServers": "./.mcp.json"
 }

@@ -1,22 +1,22 @@
 {
   "name": "revenuecat-mcp",
   "version": "0.1.0",
-  "description": "StoreOps MCP tools for the RevenueCat API.",
+  "description": "StoreOps MCP tools for RevenueCat products, entitlements, offerings, customers, paywalls, metrics, and monetization audits.",
   "author": {
     "name": "Local developer"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "StoreOps RevenueCat",
-    "shortDescription": "Automate RevenueCat workflows in Codex.",
-    "longDescription": "StoreOps MCP adds a local stdio MCP server for authenticated RevenueCat API workflows. Credentials are read from environment variables.",
+    "shortDescription": "Manage RevenueCat catalog, offerings, customers, paywalls, and metrics.",
+    "longDescription": "StoreOps MCP adds a local stdio MCP server for authenticated RevenueCat operations: projects, apps, products, entitlements, entitlement-product mappings, offerings, customers, customer purchases/subscriptions/entitlements, paywalls, metrics overview, and catalog health audits. Credentials are read from environment variables.",
     "developerName": "Local developer",
     "category": "Productivity",
     "capabilities": [
       "mcp",
       "api-tools"
     ],
-    "defaultPrompt": "Use StoreOps RevenueCat tools to inspect projects, customers, subscribers, and API resources."
+    "defaultPrompt": "Use StoreOps RevenueCat tools to audit products, entitlements, offerings, customers, paywalls, and metrics before making any writes."
   },
   "mcpServers": "./.mcp.json"
 }

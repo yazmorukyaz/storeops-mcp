@@ -2,28 +2,53 @@
 
 ![StoreOps MCP thumbnail](./assets/storeops-mcp-thumbnail.jpg)
 
-Automate App Store marketing, monetization, and product catalog work from Codex or any MCP client.
+Agent-operated App Store and monetization operations for Codex and other MCP clients.
+
+StoreOps MCP gives an AI agent a controlled operating layer for the work that normally lives across App Store Connect and RevenueCat: App Store metadata, ASO fields, localization, screenshots and preview assets, in-app purchases, subscriptions, subscription groups, RevenueCat products, entitlements, offerings, paywalls, customers, and monetization metrics.
+
+It is built for the uncomfortable middle ground where most mobile teams still work manually: checking catalog drift, filling localized metadata, auditing subscriptions, preparing IAP copy, comparing App Store setup against RevenueCat, and turning store/paywall observations into concrete launch tasks.
 
 StoreOps MCP contains two separate local MCP servers:
 
 - [`appstoreconnect-mcp`](./appstoreconnect-mcp): App Store Connect API tools for apps, builds, app versions, metadata, screenshots, in-app purchases, subscriptions, pricing, customer reviews, and Analytics Reports for ASO-style analysis.
 - [`revenuecat-mcp`](./revenuecat-mcp): RevenueCat API tools for projects, apps, products, entitlements, offerings, customers, customer subresources, paywalls, metrics overview, and monetization analysis.
 
-The servers are intentionally split because App Store Connect and RevenueCat have different auth models, permissions, APIs, and failure modes.
+The servers are intentionally split because App Store Connect and RevenueCat have different auth models, permissions, APIs, and failure modes. Together, they let an agent inspect and coordinate the full store-to-purchase path.
 
-Use it as a store growth command layer: audit App Store listings, localizations, screenshots, IAPs, subscriptions, reviews, Sales and Trends, and Analytics Reports; then connect that store picture to RevenueCat products, entitlements, offerings, customers, paywalls, and metrics. Use Superwall's hosted OAuth MCP alongside StoreOps when you want to coordinate paywall campaigns, templates, placements, and experiments with the App Store and RevenueCat catalog.
+Use it as a store growth command layer: audit App Store listings, localizations, screenshots, IAPs, subscriptions, reviews, Sales and Trends, and Analytics Reports; edit supported metadata/localization resources with explicit writes; then connect that store picture to RevenueCat products, entitlements, offerings, customers, paywalls, and metrics. Use Superwall's hosted OAuth MCP alongside StoreOps when you want to coordinate paywall campaigns, templates, placements, and experiments with the App Store and RevenueCat catalog.
 
-The practical value is marketing leverage:
+## What You Can Manage
 
-- Find missing or weak localized App Store copy before launching campaigns.
-- Inspect screenshots, preview sets, custom product pages, promoted purchases, reviews, IAPs, and subscriptions from one agent workflow.
-- Compare App Store product/catalog setup with RevenueCat entitlements, offerings, paywalls, and monetization metrics.
-- Give an LLM safe read-first tools plus explicit update tools for App Store metadata and localization work.
+StoreOps is not just a reader. It includes read-first tools plus explicit production write tools for the App Store Connect resources that are safe to target by ID.
+
+- App Store app records, app info, app versions, builds, supported locales, and version localizations.
+- App Store marketing fields including name/subtitle-style app info fields, promotional text, description, keywords, support/marketing URLs, and localized release metadata where Apple's API allows updates.
+- IAP and subscription catalog inspection, including IAPs, IAP localizations, subscription groups, subscriptions, subscription localizations, and subscription group localizations.
+- IAP/subscription localization updates, so an agent can help prepare product names, descriptions, and localized purchase copy.
+- Screenshot and preview asset inspection through localization visuals, plus screenshot set creation for supported display types.
+- Custom product pages, promoted purchases, and customer reviews for launch and conversion audits.
+- Sales and Trends reports plus Analytics Reports for ASO-style analysis when the account has reporting permissions and generated report instances.
+- RevenueCat projects, apps, products, entitlements, entitlement-product mappings, offerings, customers, customer subresources, paywalls, and metrics overview.
+- Cross-system audits that compare App Store product setup against RevenueCat products, entitlements, offerings, paywalls, and monetization state.
+
+## Why It Matters
+
+Mobile growth work breaks when store metadata, subscriptions, paywalls, and purchase infrastructure drift apart. StoreOps gives an agent enough context to find and explain those gaps before launch:
+
+- A subscription exists in App Store Connect but is missing from RevenueCat.
+- RevenueCat has a product that no longer maps cleanly to App Store catalog state.
+- A promoted purchase exists but the localized product copy is weak or incomplete.
+- App Store metadata is localized, but IAP/subscription copy is not.
+- A paywall emphasizes an offer that does not match the live product catalog.
+- Analytics Reports exist, but no generated instances are available yet.
+- Sales/report permissions are missing, so the operator knows which App Store role to fix.
+
+The result is an agent workflow that can audit, draft, localize, compare, and safely prepare changes across the store and monetization stack without hiding the production risk.
 
 ## What It Does Not Do
 
 - It does not include, upload, or sync your credentials.
-- It does not automatically submit apps, metadata, IAPs, subscriptions, screenshots, or paywalls for review.
+- It does not silently submit apps, metadata, IAPs, subscriptions, screenshots, or paywalls for review.
 - It does not mutate production data unless you call a write tool with explicit target IDs and payloads.
 - It does not replace App Store Connect, RevenueCat, or Superwall dashboards for final human review.
 - It does not bundle Superwall access. Superwall is a separate hosted OAuth MCP that can be installed next to these local servers.

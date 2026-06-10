@@ -4,7 +4,9 @@ Use this file as copy-paste context for Codex, Claude, Cursor, or another LLM ag
 
 ## What This Repo Is
 
-StoreOps MCP is a local MCP toolkit for store and monetization operations. It has two separate MCP servers:
+StoreOps MCP is a local MCP toolkit for agent-operated App Store and monetization operations. It gives an LLM controlled access to the work that usually spans App Store Connect and RevenueCat: metadata, localizations, screenshots, IAPs, subscriptions, RevenueCat products, entitlements, offerings, paywalls, customers, metrics, and cross-system audits.
+
+It has two separate MCP servers:
 
 - `appstoreconnect-mcp`: App Store Connect tools for apps, builds, App Store versions, App Store listing metadata, localizations, screenshots/previews, IAPs, subscriptions, custom product pages, promoted purchases, customer reviews, Sales and Trends reports, Analytics Reports, ASO-style analysis, and generic App Store Connect API requests.
 - `revenuecat-mcp`: RevenueCat tools for projects, apps, products, entitlements, offerings, customers, customer subresources, paywalls, metrics overview, paywall catalog analysis, monetization analysis, and generic RevenueCat API requests.
@@ -12,6 +14,15 @@ StoreOps MCP is a local MCP toolkit for store and monetization operations. It ha
 The servers are intentionally separate because App Store Connect and RevenueCat have different credentials, permission models, rate limits, APIs, and failure modes.
 
 Superwall is a related but separate hosted OAuth MCP. Use it alongside StoreOps when the workflow needs Superwall organizations, projects, apps, products, entitlements, templates, paywalls, campaigns, or webhooks. Do not assume Superwall tools are available in a session until the MCP exposes them; start with Superwall `whoami`.
+
+## High-Value Agent Workflows
+
+- Audit an App Store listing, localizations, screenshots, IAPs, subscriptions, reviews, Sales and Trends, and Analytics Reports readiness.
+- Generate and review metadata/localization drafts for supported App Store locales before calling update tools.
+- Inspect IAP and subscription localizations and prepare missing product names/descriptions.
+- Compare App Store product/catalog state with RevenueCat products, entitlements, offerings, paywalls, customers, and metrics.
+- Detect drift between what the App Store can sell and what RevenueCat/Superwall are presenting.
+- Prepare launch checklists that connect store copy, products, pricing, paywall offers, and reporting readiness.
 
 ## What It Does Not Do
 
@@ -38,6 +49,10 @@ Superwall is a related but separate hosted OAuth MCP. Use it alongside StoreOps 
 
 ```text
 Audit my App Store listing and RevenueCat monetization setup for app ID 1234567890.
+```
+
+```text
+Generate missing subscription localization drafts for every supported App Store locale, then show the exact update payloads before writing.
 ```
 
 ```text

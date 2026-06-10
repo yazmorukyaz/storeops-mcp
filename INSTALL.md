@@ -1,5 +1,7 @@
 # Install StoreOps MCP
 
+StoreOps MCP gives Codex and other MCP clients controlled access to App Store Connect and RevenueCat operations: metadata, localizations, screenshots, IAPs, subscriptions, RevenueCat products, entitlements, offerings, paywalls, customers, metrics, and cross-system audits.
+
 ## Local Development
 
 ```sh
@@ -32,10 +34,20 @@ For where to get each key, see [`CREDENTIALS.md`](./CREDENTIALS.md).
 ## What It Does Not Do
 
 - It does not include your credentials or sync them to GitHub.
-- It does not submit apps, metadata, screenshots, IAPs, or subscriptions for review by itself.
+- It does not silently submit apps, metadata, screenshots, IAPs, or subscriptions for review by itself.
 - It does not mutate production data unless an MCP write tool is called with explicit target IDs and inputs.
 - It does not replace App Store Connect, RevenueCat, or Superwall dashboards for final human review.
 - It does not bundle Superwall account access. Superwall is a hosted OAuth MCP that should be installed separately when needed.
+
+## What Agents Can Work On
+
+- App Store app records, app info, app versions, builds, and supported locales.
+- App Store listing metadata, app info localizations, version localizations, descriptions, keywords, promotional copy, URLs, and release text where Apple's API allows updates.
+- IAPs, IAP localizations, subscription groups, subscriptions, subscription localizations, and subscription group localizations.
+- Screenshot and preview asset inspection, plus screenshot set creation for supported display types.
+- Custom product pages, promoted purchases, customer reviews, Sales and Trends reports, and Analytics Reports.
+- RevenueCat projects, apps, products, entitlements, offerings, customers, paywalls, and metrics.
+- Cross-system audits between App Store catalog state and RevenueCat monetization state.
 
 ## Codex
 
@@ -142,6 +154,10 @@ Use revenuecat_list_projects.
 
 ```text
 Audit my App Store listing and RevenueCat monetization setup for app ID 1234567890.
+```
+
+```text
+Generate missing subscription localization drafts for every supported App Store locale, then show the exact update payloads before writing.
 ```
 
 ```text
