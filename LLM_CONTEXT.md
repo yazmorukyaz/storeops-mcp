@@ -11,6 +11,16 @@ StoreOps MCP is a local MCP toolkit for store and monetization operations. It ha
 
 The servers are intentionally separate because App Store Connect and RevenueCat have different credentials, permission models, rate limits, APIs, and failure modes.
 
+Superwall is a related but separate hosted OAuth MCP. Use it alongside StoreOps when the workflow needs Superwall organizations, projects, apps, products, entitlements, templates, paywalls, campaigns, or webhooks. Do not assume Superwall tools are available in a session until the MCP exposes them; start with Superwall `whoami`.
+
+## What It Does Not Do
+
+- It does not include, upload, sync, or manage user credentials.
+- It does not automatically submit App Store metadata, screenshots, IAPs, subscriptions, or paywalls for review.
+- It does not mutate production data unless an explicit write tool is called with exact target IDs and payloads.
+- It does not replace final human review in App Store Connect, RevenueCat, or Superwall.
+- It does not bundle Superwall account access. Superwall must be installed and authenticated separately through its hosted OAuth MCP.
+
 ## Safety Rules For LLM Agents
 
 - Never print `.env` contents.
@@ -22,6 +32,56 @@ The servers are intentionally separate because App Store Connect and RevenueCat 
 - If an endpoint returns `403`, explain the missing permission instead of retrying blindly.
 - If Analytics Reports have definitions but no instances, explain that Apple has not generated report instances yet.
 - Keep credentials local. Do not commit `.env`, `.p8`, generated reports, or private output data.
+- For Superwall, verify the authenticated account with `whoami` before listing or changing resources.
+
+## Try These Prompts
+
+```text
+Audit my App Store listing and RevenueCat monetization setup for app ID 1234567890.
+```
+
+```text
+Audit my RevenueCat offering against App Store subscriptions.
+```
+
+```text
+List my App Store subscriptions, RevenueCat products, entitlements, offerings, and paywalls, then show mismatches.
+```
+
+```text
+Check whether every App Store localization has matching subscription and IAP localization copy.
+```
+
+```text
+Use Superwall whoami, then list projects and paywalls so we can compare them with RevenueCat offerings.
+```
+
+## Concrete Example Output
+
+Prompt:
+
+```text
+Audit my RevenueCat offering against App Store subscriptions.
+```
+
+Example result:
+
+```text
+Summary
+- App Store subscriptions found: monthly_pro, yearly_pro
+- RevenueCat products found: monthly_pro, yearly_pro, lifetime_pro
+- RevenueCat offering "default" includes: monthly_pro, yearly_pro
+
+Issues
+- lifetime_pro exists in RevenueCat but no matching App Store subscription or IAP was found.
+- yearly_pro has matching product IDs, but App Store localization is missing for fr-FR.
+- The default offering has no explicit lifetime package, so lifetime_pro cannot be purchased from that offering.
+
+Recommended next steps
+- Confirm whether lifetime_pro should be a non-consumable IAP in App Store Connect.
+- Add missing fr-FR subscription localization before launch.
+- Add lifetime_pro to the intended RevenueCat offering only after the App Store product exists and is approved.
+```
 
 ## Install / Build
 

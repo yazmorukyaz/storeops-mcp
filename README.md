@@ -11,7 +11,7 @@ StoreOps MCP contains two separate local MCP servers:
 
 The servers are intentionally split because App Store Connect and RevenueCat have different auth models, permissions, APIs, and failure modes.
 
-Use it as a store growth command layer: audit App Store listings, localizations, screenshots, IAPs, subscriptions, reviews, Sales and Trends, and Analytics Reports; then connect that store picture to RevenueCat products, entitlements, offerings, customers, paywalls, and metrics.
+Use it as a store growth command layer: audit App Store listings, localizations, screenshots, IAPs, subscriptions, reviews, Sales and Trends, and Analytics Reports; then connect that store picture to RevenueCat products, entitlements, offerings, customers, paywalls, and metrics. Use Superwall's hosted OAuth MCP alongside StoreOps when you want to coordinate paywall campaigns, templates, placements, and experiments with the App Store and RevenueCat catalog.
 
 The practical value is marketing leverage:
 
@@ -19,6 +19,14 @@ The practical value is marketing leverage:
 - Inspect screenshots, preview sets, custom product pages, promoted purchases, reviews, IAPs, and subscriptions from one agent workflow.
 - Compare App Store product/catalog setup with RevenueCat entitlements, offerings, paywalls, and monetization metrics.
 - Give an LLM safe read-first tools plus explicit update tools for App Store metadata and localization work.
+
+## What It Does Not Do
+
+- It does not include, upload, or sync your credentials.
+- It does not automatically submit apps, metadata, IAPs, subscriptions, screenshots, or paywalls for review.
+- It does not mutate production data unless you call a write tool with explicit target IDs and payloads.
+- It does not replace App Store Connect, RevenueCat, or Superwall dashboards for final human review.
+- It does not bundle Superwall access. Superwall is a separate hosted OAuth MCP that can be installed next to these local servers.
 
 ## Security
 
@@ -37,6 +45,14 @@ Each plugin includes a `.env.example`. Copy it to `.env` locally and fill in you
 For step-by-step instructions on where to get each key, see [`CREDENTIALS.md`](./CREDENTIALS.md).
 
 For an LLM-ready copy-paste briefing that covers tools, credentials, abilities, workflows, safety rules, and known limitations, see [`LLM_CONTEXT.md`](./LLM_CONTEXT.md).
+
+## Safety Model
+
+- Local credentials: keep `.env`, `.p8` files, API keys, shared secrets, JWTs, bearer tokens, and downloaded private reports on your machine and out of Git.
+- Read first: start with auth status, list, get, and audit tools before update tools.
+- Explicit writes: production writes should name exact app IDs, product IDs, localization IDs, offering IDs, customer IDs, or paywall IDs.
+- No secret logging: tools should report whether credentials are configured, not print credential values.
+- Human review: treat App Store Connect, RevenueCat, and Superwall as production systems and review payloads before mutation.
 
 ## Requirements
 
@@ -68,6 +84,17 @@ cp revenuecat-mcp/.env.example revenuecat-mcp/.env
 Then edit each `.env`.
 
 Credential source details are documented in [`CREDENTIALS.md`](./CREDENTIALS.md).
+
+## Optional Superwall MCP
+
+Superwall is not bundled in this repo because it uses a hosted OAuth MCP instead of a local stdio server. Install it separately when you want an agent to inspect or manage Superwall organizations, projects, applications, products, entitlements, templates, paywalls, campaigns, and webhooks.
+
+```sh
+codex mcp add superwall --url https://superwall-mcp.superwall.com/mcp
+codex mcp login superwall
+```
+
+After login, start with Superwall `whoami`, then read organization/project/paywall data before writing.
 
 ## App Store Connect Credentials
 
@@ -192,6 +219,55 @@ The generic request tools are included so agents can use API endpoints that do n
 `revenuecat_audit_paywall_catalog` is the monetization entry point. It summarizes apps, products, entitlements, offerings, paywalls, customers, metrics, and checks whether the product-to-entitlement-to-offering chain is fetchable.
 
 The analytics tools support Apple's bulk Analytics Reports API flow: create or inspect report requests, list report definitions, list generated instances, list/download segments, decompress report files, parse rows, and inspect ASO-relevant reports such as discovery and engagement, downloads, purchases, subscriptions, installs/deletions, sessions, crashes, web preview engagement, and retention messaging.
+
+## Try These Prompts
+
+```text
+Audit my App Store listing and RevenueCat monetization setup for app ID 1234567890.
+```
+
+```text
+Audit my RevenueCat offering against App Store subscriptions.
+```
+
+```text
+List my App Store subscriptions, RevenueCat products, entitlements, offerings, and paywalls, then show mismatches.
+```
+
+```text
+Check whether every App Store localization has matching subscription and IAP localization copy.
+```
+
+```text
+Use Superwall whoami, then list projects and paywalls so we can compare them with RevenueCat offerings.
+```
+
+## Example Output
+
+Prompt:
+
+```text
+Audit my RevenueCat offering against App Store subscriptions.
+```
+
+Example result:
+
+```text
+Summary
+- App Store subscriptions found: monthly_pro, yearly_pro
+- RevenueCat products found: monthly_pro, yearly_pro, lifetime_pro
+- RevenueCat offering "default" includes: monthly_pro, yearly_pro
+
+Issues
+- lifetime_pro exists in RevenueCat but no matching App Store subscription or IAP was found.
+- yearly_pro has matching product IDs, but App Store localization is missing for fr-FR.
+- The default offering has no explicit lifetime package, so lifetime_pro cannot be purchased from that offering.
+
+Recommended next steps
+- Confirm whether lifetime_pro should be a non-consumable IAP in App Store Connect.
+- Add missing fr-FR subscription localization before launch.
+- Add lifetime_pro to the intended RevenueCat offering only after the App Store product exists and is approved.
+```
 
 ## Manual Smoke Tests
 
